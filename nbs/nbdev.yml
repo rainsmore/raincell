@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "raincell"
+  site-url: "https://rainsmore.github.io/raincell"
+  description: "A user-friendly Python library for transforming commercial microwave links into rain estimation insights. Built with nbdev and Jupyter notebooks, this tool offers robust scientific and visualization capabilities, tailored for researchers in the field."
+  repo-branch: main
+  repo-url: "https://github.com/rainsmore/raincell"
