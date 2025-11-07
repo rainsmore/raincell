@@ -7,4 +7,4 @@ d = { 'settings': { 'branch': 'main',
                 'lib_path': 'raincell'},
   'syms': { 'raincell.config': {},
             'raincell.sample': { 'raincell.sample.open_cml_sample': ('sample_data.html#open_cml_sample', 'raincell/sample.py'),
-                                 'raincell.sample.open_sample_gauges': ('sample_data.html#open_sample_gauges', 'raincell/sample.py')}}}
+                                 'raincell.sample.open_gauge_sample': ('sample_data.html#open_gauge_sample', 'raincell/sample.py')}}}
