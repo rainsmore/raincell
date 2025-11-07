@@ -5,4 +5,6 @@ d = { 'settings': { 'branch': 'main',
                 'doc_host': 'https://rainsmore.github.io',
                 'git_url': 'https://github.com/rainsmore/raincell',
                 'lib_path': 'raincell'},
-  'syms': {'raincell.core': {'raincell.core.foo': ('core.html#foo', 'raincell/core.py')}}}
+  'syms': { 'raincell.config': {},
+            'raincell.sample': { 'raincell.sample.open_cml_sample': ('sample_data.html#open_cml_sample', 'raincell/sample.py'),
+                                 'raincell.sample.open_sample_gauges': ('sample_data.html#open_sample_gauges', 'raincell/sample.py')}}}
