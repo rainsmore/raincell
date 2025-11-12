@@ -6,6 +6,30 @@
 This file will become your README and also the index of your
 documentation.
 
+## Usage
+
+### Installation
+
+Install latest from the GitHub
+[repository](https://github.com/rainsmore/raincell):
+
+``` sh
+$ pip install -U git+ssh://git@github.com/rainsmore/raincell.git
+```
+
+or from [conda](https://anaconda.org/rainsmore/raincell) (not available
+yet)
+
+``` sh
+$ conda install -c rainsmore raincell
+```
+
+or from [pypi](https://pypi.org/project/raincell/) (not available yet)
+
+``` sh
+$ pip install raincell
+```
+
 ## Developer Guide
 
 If you are new to using `nbdev` here are some useful pointers to get you
@@ -22,29 +46,6 @@ $ pip install -e .
 
 # compile to have changes apply to raincell
 $ nbdev_prepare
-```
-
-## Usage
-
-### Installation
-
-Install latest from the GitHub
-[repository](https://github.com/rainsmore/raincell):
-
-``` sh
-$ pip install git+https://github.com/rainsmore/raincell.git
-```
-
-or from [conda](https://anaconda.org/rainsmore/raincell)
-
-``` sh
-$ conda install -c rainsmore raincell
-```
-
-or from [pypi](https://pypi.org/project/raincell/)
-
-``` sh
-$ pip install raincell
 ```
 
 ### Documentation
