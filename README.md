@@ -14,7 +14,7 @@ Install latest from the GitHub
 [repository](https://github.com/rainsmore/raincell):
 
 ``` sh
-$ pip install git+ssh://git@github.com/rainsmore/raincell.git
+$ pip install -U git+ssh://git@github.com/rainsmore/raincell.git
 ```
 
 or from [conda](https://anaconda.org/rainsmore/raincell) (not available
@@ -37,14 +37,40 @@ started.
 
 ### Install raincell in Development mode
 
+make sure raincell package is installed in development mode
+
 ``` sh
-# make sure raincell package is installed in development mode
 $ pip install -e .
+```
 
-# make changes under nbs/ directory
-# ...
+You may also need to install the pre-commit hooks. If you are using
+Jupyter Notebooks or Jupyter Lab as your IDE, you only need to run:
 
-# compile to have changes apply to raincell
+``` sh
+nbdev_install_hooks
+```
+
+However, if you are using another IDE such as VS Code, you will need to
+run:
+
+``` sh
+pre-commit install
+```
+
+Check the official nbdev documentation for more information on
+[nbdev_install_hooks](https://nbdev.fast.ai/tutorials/git_friendly_jupyter.html)
+or on [Pre-Commit
+Hooks](https://nbdev.fast.ai/tutorials/pre_commit.html).
+
+Then make changes under nbs/ directory
+
+``` bash
+...
+```
+
+compile to have changes apply to raincell
+
+``` sh
 $ nbdev_prepare
 ```
 
