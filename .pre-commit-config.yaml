@@ -1,16 +1,6 @@
 repos:
-  - repo: local
-    hooks:
-      - id: nbdev-clean
-        name: Prepare notebooks for commit
-        entry: |
-          bash -c '
-            git diff --cached --name-only --diff-filter=AM | grep "\.ipynb$" | while IFS= read -r file; do
-              echo "Cleaning: $file"
-              nbdev_clean --fname "$file" || echo "Failed to clean $file"
-              git add "$file" || echo "Failed to add $file"
-            done
-          '
-        language: system
-        pass_filenames: false
-        files: \.ipynb$
+- repo: https://github.com/fastai/nbdev
+  rev: 2.2.10
+  hooks:
+  - id: nbdev_clean
+  - id: nbdev_export
