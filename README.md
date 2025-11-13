@@ -14,7 +14,7 @@ Install latest from the GitHub
 [repository](https://github.com/rainsmore/raincell):
 
 ``` sh
-$ pip install -U git+ssh://git@github.com/rainsmore/raincell.git
+$ pip install git+ssh://git@github.com/rainsmore/raincell.git
 ```
 
 or from [conda](https://anaconda.org/rainsmore/raincell) (not available
