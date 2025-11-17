@@ -13,7 +13,7 @@ from geopy.distance import geodesic
 # %% ../../nbs/05_data.merge.ipynb 11
 def get_link_centers_opensense_v2(cml: xr.Dataset) -> pd.DataFrame:
     """Get the center coordinates of each link in the CML dataset for the V2 of the OpenSense standard."""
-    links = cml[["site_0_lat", "site_0_lon", "site_1_lat", "site_1_lon"]]
+    links = cml[["cml_id"]]
     links["center_lat"] = (links["site_0_lat"] + links["site_1_lat"]) / 2
     links["center_lon"] = (links["site_0_lon"] + links["site_1_lon"]) / 2
     links = links.to_dataframe()[list(links.data_vars)]
@@ -31,11 +31,22 @@ def get_gauge_coords(
     return gauges_coords
 
 # %% ../../nbs/05_data.merge.ipynb 16
-def haversine_distance(point1: pd.Series, point2: pd.Series) -> float:
+# Distance in meters to match units with OpenSense V2 standard length coordinate units
+def haversine_distance(point1: pd.Series, point2: pd.Series , units: str = "meters") -> float:
     """Calculate the great circle distance between two points on Earth."""
-    return geodesic((point1["lat"], point1["lon"]), (point2["lat"], point2["lon"])).kilometers
+    return getattr(geodesic((point1["lat"], point1["lon"]), (point2["lat"], point2["lon"])), units)
 
-# %% ../../nbs/05_data.merge.ipynb 23
+# %% ../../nbs/05_data.merge.ipynb 20
+def get_nearest_gauge_n_distance_from_ctr(
+        link_ctr: pd.Series, # Series containing the coordinates of the link center
+        gauge_coords: pd.DataFrame # DataFrame containing the coordinates of the gauges
+    ) -> tuple[str, float]:
+    """Get the nearest gauge to a given link and the distance."""
+    distances = gauge_coords.apply(haversine_distance, axis=1, point2=link_ctr)
+    nearest_gauge = distances.idxmin()
+    return nearest_gauge, round(float(distances[nearest_gauge]), 1)
+
+# %% ../../nbs/05_data.merge.ipynb 25
 def assign_nearest_gauge_to_link_center(
         cml: xr.Dataset, # CML dataset containing link information
         gauges: xr.Dataset, # Dataset containing gauges coordinates
@@ -46,8 +57,12 @@ def assign_nearest_gauge_to_link_center(
     """Assign the nearest gauge to each CML link based on geodesic distance from gauge to link center coordinates."""
     link_centers = get_link_centers_opensense_v2(cml)
     gauges_coords = get_gauge_coords(gauges)
-    nearest_gauge = {cml_id: gauges_coords.apply(haversine_distance, axis=1, point2=ctr_coords).idxmin() for cml_id, ctr_coords in link_centers.iterrows()}
-    nearest_gauge = pd.Series(nearest_gauge.values(), index=nearest_gauge.keys(), name=gauge_id)
-    nearest_gauge.index.name = "cml_id"
-    return xr.merge([cml, gauges.sel({gauge_id: nearest_gauge.to_xarray()})], join="outer")
+    nearest_gauges = {cml_id: get_nearest_gauge_n_distance_from_ctr(l, gauges_coords) for cml_id, l in link_centers.iterrows()}
+    nearest_gauges = pd.DataFrame(nearest_gauges.values(), index=nearest_gauges.keys(), columns=["gauge_name", "dist_to_gauge"])
+    nearest_gauges.index.name = "cml_id"
+
+    dtg = nearest_gauges[["dist_to_gauge"]].to_xarray()
+    dtg.dist_to_gauge.attrs = {"units": "meters", "long_name": "distance_from_cml_to_nearest_gauge", "method": "geodesic_distance_from_cml_center_to_gauge"}
+    dtg = dtg.set_coords("dist_to_gauge")
+    return xr.merge([cml, gauges.sel({gauge_id: nearest_gauges["gauge_name"].to_xarray()}), dtg], join="outer")
     
