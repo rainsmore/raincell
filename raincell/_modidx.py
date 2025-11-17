@@ -14,4 +14,6 @@ d = { 'settings': { 'branch': 'main',
                                      'raincell.data.merge.haversine_distance': ( 'data.merge.html#haversine_distance',
                                                                                  'raincell/data/merge.py')},
             'raincell.sample': { 'raincell.sample.open_cml_sample': ('sample_data.html#open_cml_sample', 'raincell/sample.py'),
-                                 'raincell.sample.open_gauge_sample': ('sample_data.html#open_gauge_sample', 'raincell/sample.py')}}}
+                                 'raincell.sample.open_gauge_sample': ('sample_data.html#open_gauge_sample', 'raincell/sample.py')},
+            'raincell.wetdry': { 'raincell.wetdry.schleiss_n_berne_2010_nms_adapted': ( 'wetdry.html#schleiss_n_berne_2010_nms_adapted',
+                                                                                        'raincell/wetdry.py')}}}

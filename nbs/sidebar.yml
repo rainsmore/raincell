@@ -4,3 +4,4 @@ website:
       - index.ipynb
       - 01_sample_data.ipynb
       - 05_data.merge.ipynb
+      - 10_wetdry.ipynb
