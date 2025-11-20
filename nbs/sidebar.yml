@@ -6,3 +6,4 @@ website:
       - 05_data.merge.ipynb
       - 10_wetdry.ipynb
       - 11_baseline.ipynb
+      - 12_waa.ipynb
