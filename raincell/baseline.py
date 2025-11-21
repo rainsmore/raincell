@@ -9,7 +9,7 @@ __all__ = ['get_bl_as_last_dry_step']
 import inspect
 import xarray as xr
 
-# %% ../nbs/11_baseline.ipynb 18
+# %% ../nbs/11_baseline.ipynb 16
 def get_bl_as_last_dry_step(
         att: xr.Dataset, # ds containing the raw attenuation variables
         wet: xr.DataArray # da containing wet events as booleans
