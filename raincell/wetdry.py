@@ -18,6 +18,7 @@ def schleiss_n_berne_2010_nms_adapted(
     sigma0 = sw.quantile(q=(1-r), dim="time")
     wet = sw >= sigma0
     wet = wet.drop_vars("quantile")
+    wet.name = "wet"
     wet.attrs["long_name"] = "wet_dry_classification"
     wet.attrs["method"] = "schleiss_n_berne_2010_adapted_to_nms_min_max_sampling"
-    return wet.to_dataset(name="wet")
+    return wet
