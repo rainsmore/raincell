@@ -7,3 +7,4 @@ website:
       - 10_wetdry.ipynb
       - 11_baseline.ipynb
       - 12_waa.ipynb
+      - 13_rain_rate.ipynb
