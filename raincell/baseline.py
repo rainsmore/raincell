@@ -16,7 +16,7 @@ def get_bl_as_last_dry_step(
         ) -> xr.Dataset|xr.DataArray: # ds containing the baseline of all the attenuation variables in the input
     """Create a baseline based on the last dry step before the each wet event."""
     def updated_attrs(da, method):
-        return {"long_name": getattr(da.attrs, "long_name", v) + "_baseline", "method": method}
+        return {"long_name": getattr(da.attrs, "long_name", da.name) + "_baseline", "method": method}
     baseline = att.where(~wet).ffill(dim="time")
     fname = inspect.currentframe().f_code.co_name
     if isinstance(att, xr.DataArray):
