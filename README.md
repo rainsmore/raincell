@@ -10,11 +10,11 @@
 
 ## Install
 
-Install latest from the GitHub
+Install the latest version of the package from GitHub
 [repository](https://github.com/rainsmore/raincell):
 
 ``` sh
-$ pip install -U git+ssh://git@github.com/rainsmore/raincell.git
+$ pip install git+ssh://git@github.com/rainsmore/raincell.git
 ```
 
 in the future we will also allow installing directly from conda and from
@@ -3463,7 +3463,7 @@ Data variables:
 
 Rain related attenuation has two components: Wet Antenna Attenuation
 (WAA) and Path Integrated Attenuation (PIA). We need to isolate the
-later to be able to compute estimate the percipitation rate.
+later to be able to estimate the percipitation rate.
 
 ``` python
 from raincell import waa
