@@ -11,13 +11,17 @@ import xarray as xr
 
 # %% ../nbs/11_baseline.ipynb 16
 def get_bl_as_last_dry_step(
-        att: xr.Dataset, # ds containing the raw attenuation variables
+        att: xr.Dataset|xr.DataArray, # ds containing the raw attenuation variables
         wet: xr.DataArray # da containing wet events as booleans
-        ) -> xr.Dataset: # ds containing the baseline of all the attenuation variables in the input
+        ) -> xr.Dataset|xr.DataArray: # ds containing the baseline of all the attenuation variables in the input
     """Create a baseline based on the last dry step before the each wet event."""
+    def updated_attrs(da, method):
+        return {"long_name": getattr(da.attrs, "long_name", da.name) + "_baseline", "method": method}
     baseline = att.where(~wet).ffill(dim="time")
-    for v in baseline.data_vars:
-        attrs = baseline[v].attrs
-        attrs["long_name"] = getattr(attrs, "long_name", v) + "_baseline"    
-        attrs["method"] = inspect.currentframe().f_code.co_name
+    fname = inspect.currentframe().f_code.co_name
+    if isinstance(att, xr.DataArray):
+        baseline.attrs = {**baseline.attrs, **updated_attrs(baseline, fname)}
+    else:
+        for v in baseline.data_vars:
+            baseline[v].attrs = {**baseline[v].attrs, **updated_attrs(baseline[v], fname)}
     return baseline

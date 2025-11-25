@@ -48,10 +48,12 @@ def reindex_coefs(
 
 # %% ../nbs/13_rain_rate.ipynb 22
 def get_overeem_et_al_2013_min_max_nms_tprate(
-        pia: xr.Dataset, # ds containing path integrated attenuation with Amin and Amax variables
-        cfs: xr.Dataset, # ds containing a and b, k-R law coefficients with frequency dim
+        pia: xr.Dataset, # ds containing the minimum and maximum Path Integrated Attenuations (PIA)
+        cfs: xr.Dataset, # ds containing `a` and `b`, k-R law coefficients as variable and `frequency` as dim
         cfs_assign_method: str = "nearest", # xr.sel method used to map the pia frequencies to the cfs freqs
-        alpha: float = 0.3 # weighting factor between max and min sampling rain rates
+        alpha: float = 0.3, # weighting factor between max and min sampling rain rates
+        name_min: str = "pia_min", # Name of the variable containing minimum PIA
+        name_max: str = "pia_max" # Name of the variable containing maximum PIA
     ) -> xr.Dataset:
     """Compute the rain rate using the Overeem et al. (2013) min/max sampling approach. """
     def kR(pia, a, b, l):
@@ -59,10 +61,8 @@ def get_overeem_et_al_2013_min_max_nms_tprate(
     H = pia > 0
     cfs = reindex_coefs(pia, cfs, method=cfs_assign_method)
 
-    Rmin = kR(pia["Amin"], cfs.a, cfs.b, pia.length)
-    Rmin = Rmin.where(H["Amin"], 0)
-    Rmax = kR(pia["Amax"], cfs.a, cfs.b, pia.length)
-    Rmax = Rmax.where(H["Amax"], 0)
+    Rmin = kR(pia[name_min], cfs.a, cfs.b, pia.length).where(H[name_min], 0)
+    Rmax = kR(pia[name_max], cfs.a, cfs.b, pia.length).where(H[name_max], 0)
 
     tprate = (alpha * Rmax + (1 - alpha) * Rmin).to_dataset(name="tprate")
     tprate["tprate"].attrs = {"long_name": "time_mean_path_averaged_rain_rate", "units": "mm/h"}
