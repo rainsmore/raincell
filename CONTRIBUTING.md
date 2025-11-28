@@ -8,7 +8,7 @@ You will probably find that Raincell's programming style is quite unusual for a 
 
 When you view the notebook on GitHub or clone a local copy, you will see that, before developing each function, there are cells containing a few lines of code showing the expected output. Once the development produces the expected result, we combine the previous lines into a single function that can be imported from the library. Although this violates the 'Don't Repeat Yourself' (DRY) principle, this is a deliberate design choice. Just as solving a problem with pen and paper involves gradually developing the solution step by step, we believe this approach is equally useful for developing algorithms in their computational form. This makes the reasoning easier to understand and review, both for oneself and for others. Additionally, you can download the notebook containing the relevant section and use it as a starting point.
 
-This is possible thanks to the ecosystem of [answer.ai](https://www.answer.ai/) (formerly [fast.ai](https://www.fast.ai/)) and in particular [nbdev](https://nbdev.fast.ai/). You can find more information in [this](https://www.youtube.com/watch?v=rX1yGxJijsI) talk by Hamel Hussain.
+This is possible thanks to the ecosystem of [answer.ai](https://www.answer.ai/) (formerly [fast.ai](https://www.fast.ai/)) and in particular [nbdev](https://nbdev.fast.ai/). You can find more information in [this](https://www.youtube.com/watch?v=rX1yGxJijsI) talk.
 
 ## How to get started
 
