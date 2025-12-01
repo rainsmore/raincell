@@ -14,7 +14,7 @@ def schleiss_n_berne_2010_nms_adapted(
         cml: xr.Dataset, # Input CML dataset with tsl_max and rsl_min variables
         r: float = 0.1 # Fraction of time it is assumed to be raining
         ) -> xr.Dataset:
-    """ Wet Dry classification algorithm adapted to work with NMS sampling adapted from Schleiss et al., 2010. """
+    """ Wet Dry classification algorithm adapted to work with NMS sampling adapted from Schleiss and Berne (2010). """
     sw = cml["tsl_max"] - cml["rsl_min"]
     all_nan_in_time = ~sw.isnull().all(dim="time")
     sigma0 = sw.fillna(-9999).quantile(q=(1-r), dim="time").where(all_nan_in_time) # Rm runetime warning
