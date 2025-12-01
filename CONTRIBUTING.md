@@ -43,6 +43,11 @@ $ nbdev_prepare
 ```
 You can learn what nbdev_prepare does [here](https://nbdev.fast.ai/tutorials/tutorial.html#prepare-your-changes).
 
+## Do you want to contribute to the documentation?
+
+* Docs are automatically created from the notebooks in the nbs folder.
+* We use the **American Meteorological Society** citation [style](https://www.ametsoc.org/ams/publications/author-information/formatting-and-manuscript-components/references/) for our **references**. Please use this style when adding new references.
+
 ## Did you find a bug?
 
 * Ensure the bug was not already reported by searching on GitHub under Issues.
@@ -54,7 +59,3 @@ You can learn what nbdev_prepare does [here](https://nbdev.fast.ai/tutorials/tut
 * Open a new GitHub pull request with the patch.
 * Ensure that your PR includes a test that fails without your patch and passes with it.
 * Ensure the PR description clearly describes the problem and solution. Include the relevant issue number if applicable.
-
-## Do you want to contribute to the documentation?
-
-* Docs are automatically created from the notebooks in the nbs folder.
