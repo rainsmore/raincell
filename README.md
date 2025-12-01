@@ -34,7 +34,28 @@ $ pip install raincell
 [conda]: https://anaconda.org/rainsmore/raincell
 -->
 
+## Contributing
+
+All help is welcome, so if you would like to contribute (bug reports,
+documentation, etc.), please check our contribution
+[guide](https://github.com/rainsmore/raincell/blob/main/CONTRIBUTING.md).
+This guide also explains our approach to notebook development.
+
 ## Getting started
+
+If this is the first time you are using the Raincell library, we highly
+recommend following the tutorial in this section. You can either work
+through the online documentation or download this
+[file](https://github.com/rainsmore/raincell/blob/main/nbs/index.ipynb)
+as a notebook and work through it locally. The tutorial will guide you
+step by step through the process of converting raw Commercial Microwave
+Link (CML) data into precipitation rate estimates.
+
+> [!TIP]
+>
+> If you are already familiar with the library, you can skip to the
+> [Next steps](#sec-next-steps) section. However, we recommend checking
+> it from time to time, as new basic functionalities will appear here.
 
 ``` python
 from raincell import open_cml_sample, open_gauge_sample
@@ -4878,46 +4899,10 @@ plot.romulo_plot(tprate["tprate"], gauge["tprate"], cml_vmax=4, gauges_vmax=4);
 
 ![](index_files/figure-commonmark/cell-16-output-1.png)
 
-## Developer Guide
+## Next steps
 
-If you are new to using `nbdev` here are some useful pointers to get you
-started.
-
-### Install raincell in Development mode
-
-make sure raincell package is installed in development mode
-
-``` sh
-$ pip install -e .
-```
-
-You may also need to install the pre-commit hooks. If you are using
-Jupyter Notebooks or Jupyter Lab as your IDE, you only need to run:
-
-``` sh
-nbdev_install_hooks
-```
-
-However, if you are using another IDE such as VS Code, you will need to
-run:
-
-``` sh
-pre-commit install
-```
-
-Check the official nbdev documentation for more information on
-[nbdev_install_hooks](https://nbdev.fast.ai/tutorials/git_friendly_jupyter.html)
-or on [Pre-Commit
-Hooks](https://nbdev.fast.ai/tutorials/pre_commit.html).
-
-Then make changes under nbs/ directory
-
-``` bash
-...
-```
-
-compile to have changes apply to raincell
-
-``` sh
-$ nbdev_prepare
-```
+Now that you are familiar with the library, you can start using it by
+importing the relevant functions. Alternatively, you can download any of
+the available notebooks to use as a starting point for analysing your
+own data. You can also explore the available methods, visualisations,
+etc. by reading through the documentation.
