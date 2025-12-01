@@ -45,10 +45,11 @@ This guide also explains our approach to notebook development.
 
 If this is the first time you are using the Raincell library, we highly
 recommend following the tutorial in this section. You can either work
-through the online documentation or download this file as a notebook and
-work through it locally. The tutorial will guide you step by step
-through the process of converting raw Commercial Microwave Link (CML)
-data into precipitation rate estimates.
+through the online documentation or download this
+[file](https://github.com/rainsmore/raincell/blob/main/nbs/index.ipynb)
+as a notebook and work through it locally. The tutorial will guide you
+step by step through the process of converting raw Commercial Microwave
+Link (CML) data into precipitation rate estimates.
 
 > [!TIP]
 >
