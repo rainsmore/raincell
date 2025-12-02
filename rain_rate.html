@@ -1,0 +1,1676 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.26">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="This module contains methods for estimating rain rates from path-integrated attenuation (PIA). Currently, we compute the time-mean total precipitation rate as defined by ECMWF, using tprate as the variable name for simplicity. Note that while ECMWF uses units of m·s^{-1}, we may use different units such as mm·h^{-1}.">
+
+<title>Path Average Rain Rate Estimation – raincell</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" crossorigin="anonymous"></script><script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-e85a36ed8f9e8f821a55ee8e73cfb0fa.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdn.jsdelivr.net/npm/requirejs@2.3.6/require.min.js" integrity="sha384-c9c+LnTbwQ3aujuU7ULEPVvgLs+Fn6fJUvIGTsuu1ZcCf11fiEubah0ttpca4ntM sha384-6V1/AdqZRWk1KAlWbKBlGhN7VG4iE/yAZcO6NZPMF8od0vukrvr0tg4qY6NSrItx" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles.css">
+<meta property="og:title" content="Path Average Rain Rate Estimation – raincell">
+<meta property="og:description" content="This module contains methods for estimating rain rates from path-integrated attenuation (PIA). Currently, we compute the time-mean total precipitation rate as defined by ECMWF, using tprate as the variable name for simplicity. Note that while ECMWF uses units of \(m·s^{-1}\), we may use different units such as \(mm·h^{-1}\).">
+<meta property="og:image" content="https://rainsmore.github.io/raincell/13_rain_rate_files/figure-html/cell-7-output-1.png">
+<meta property="og:site_name" content="raincell">
+<meta property="og:image:height" content="590">
+<meta property="og:image:width" content="989">
+<meta name="twitter:title" content="Path Average Rain Rate Estimation – raincell">
+<meta name="twitter:description" content="This module contains methods for estimating rain rates from path-integrated attenuation (PIA). Currently, we compute the time-mean total precipitation rate as defined by ECMWF, using tprate as the variable name for simplicity. Note that while ECMWF uses units of \(m·s^{-1}\), we may use different units such as \(mm·h^{-1}\).">
+<meta name="twitter:image" content="https://rainsmore.github.io/raincell/13_rain_rate_files/figure-html/cell-7-output-1.png">
+<meta name="twitter:image-height" content="590">
+<meta name="twitter:image-width" content="989">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">raincell</span>
+    </a>
+  </div>
+        <div class="quarto-navbar-tools tools-end">
+</div>
+          <div id="quarto-search" class="" title="Search"></div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./rain_rate.html">Path Average Rain Rate Estimation</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">raincell</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./sample_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Sample data</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./data.merge.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Merge multisensor data</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./wetdry.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Wet/Dry classification</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./baseline.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Baseline</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./waa.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Wet Antenna Attenuation (WAA)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./rain_rate.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Path Average Rain Rate Estimation</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./plot.romulo.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Romulo plot</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#k-r-law-for-network-management-system-nms-minmax-sampling" id="toc-k-r-law-for-network-management-system-nms-minmax-sampling" class="nav-link active" data-scroll-target="#k-r-law-for-network-management-system-nms-minmax-sampling">k-R law for Network Management System (NMS) min/max sampling</a>
+  <ul class="collapse">
+  <li><a href="#alcoba_2019_africa_coefs" id="toc-alcoba_2019_africa_coefs" class="nav-link" data-scroll-target="#alcoba_2019_africa_coefs">alcoba_2019_africa_coefs</a></li>
+  <li><a href="#get_overeem_et_al_2013_min_max_nms_tprate" id="toc-get_overeem_et_al_2013_min_max_nms_tprate" class="nav-link" data-scroll-target="#get_overeem_et_al_2013_min_max_nms_tprate">get_overeem_et_al_2013_min_max_nms_tprate</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/rainsmore/raincell/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div><div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="rain_rate.html.md"><i class="bi bi-file-code"></i>CommonMark</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Path Average Rain Rate Estimation</h1>
+</div>
+
+<div>
+  <div class="description">
+    This module contains methods for estimating rain rates from path-integrated attenuation (PIA). Currently, we compute the time-mean total precipitation rate as defined by <a href="https://codes.ecmwf.int/grib/param-db/172228">ECMWF</a>, using <code>tprate</code> as the variable name for simplicity. Note that while ECMWF uses units of <span class="math inline">\(m·s^{-1}\)</span>, we may use different units such as <span class="math inline">\(mm·h^{-1}\)</span>.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!-- WARNING: THIS FILE WAS AUTOGENERATED! DO NOT EDIT! -->
+<div id="efa517e7" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>cml, baseline <span class="op">=</span> open_cml_sample(), open_cml_sample(<span class="st">"baseline"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="k-r-law-for-network-management-system-nms-minmax-sampling" class="level2">
+<h2 class="anchored" data-anchor-id="k-r-law-for-network-management-system-nms-minmax-sampling">k-R law for Network Management System (NMS) min/max sampling</h2>
+<p>The rain rate (<span class="math inline">\(R\)</span>) can be estimated from the specific attenuation (<span class="math inline">\(k\)</span>) expressed in <span class="math inline">\(dB·km^{-1}\)</span> using an exponential law known as the k-R relationship: <span class="math display">\[
+k = aR^b
+\]</span> where <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span> are parameters that depend on the frequency, polarisation and drop size distribution (DSD). However, the available attenuation is the Path Integrated Attenuation: <span class="math display">\[
+PIA = \int_0^L k(l) \, dl
+\]</span> where <span class="math inline">\(L\)</span> is the length of the link. We are interested in the path-averaged rain rate <span class="math inline">\(\bar{R}\)</span>, and the above relationship can be approximated as:</p>
+<p><span class="math display">\[
+PIA = \int_0^L k(l) \, dl = \int_0^L a R(l)^b \, dl \stackrel{b \approx 1}{=} a \bar{R}^b L
+\]</span> The further <span class="math inline">\(b\)</span> deviates from 1, the more imprecise this relationship becomes. If attenuation sampling is not instantaneous (e.g., 15 minutes), PIA is also time-averaged; thus <span class="math inline">\(\bar{R}\)</span> becomes the time-mean path-averaged precipitation rate.</p>
+<p>Considering that the sample data is located in Douala, and that the <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span> coefficients are dependent on the DSD, which varies by region, we will first develop the coefficients estimated by Alcoba (2019).</p>
+<hr>
+<p><a href="https://github.com/rainsmore/raincell/blob/main/raincell/rrate.py#L13" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="alcoba_2019_africa_coefs" class="level3">
+<h3 class="anchored" data-anchor-id="alcoba_2019_africa_coefs">alcoba_2019_africa_coefs</h3>
+<blockquote class="blockquote">
+<pre><code> alcoba_2019_africa_coefs ()</code></pre>
+</blockquote>
+<p><em>k-R relationship coefficients for Africa from <a href="https://theses.hal.science/tel-02955598/">Alcoba (2019)</a>.</em></p>
+<div id="21d8cf7f" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>alcoba_2019_africa_coefs().to_dataframe()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">a</th>
+<th data-quarto-table-cell-role="th">b</th>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">frequency</th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">7000</th>
+<td>0.000197</td>
+<td>1.8540</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">8500</th>
+<td>0.006600</td>
+<td>1.2897</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">11000</th>
+<td>0.019500</td>
+<td>1.1951</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">11500</th>
+<td>0.023000</td>
+<td>1.1775</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">13000</th>
+<td>0.034700</td>
+<td>1.1333</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">14500</th>
+<td>0.047300</td>
+<td>1.1022</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">15000</th>
+<td>0.051700</td>
+<td>1.0943</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">18000</th>
+<td>0.078100</td>
+<td>1.0654</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">19000</th>
+<td>0.087300</td>
+<td>1.0600</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">22000</th>
+<td>0.117100</td>
+<td>1.0471</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">23000</th>
+<td>0.128100</td>
+<td>1.0428</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>While different coefficient assignment algorithms are available (see below), they all based on some form of nearest value. If your frequencies differ significantly from those listed, you may need to use a downscaling algorithm (such as interpolation) to generate coefficients for your specific frequencies before estimating rainfall.</p>
+</div>
+</div>
+<p>In many scenarios, NMS only save the min and max values for the sampling interval. Thus rain rate has to be estimated from those values. Overeem et al.&nbsp;(2013), developped an algorithm that computes time mean path averaged rain rate for 15 minute interval sampling based only on minimum and máximum values. The algorith asumes that the TSL is constant for each time. Thus máximum and mínimum attenuations are computed as follows:</p>
+<p><span class="math display">\[
+A_{min} = (TSL - RSL_{min}) - baseline
+\]</span></p>
+<p><span class="math display">\[
+A_{max} = (TSL - RSL_{max}) - baseline
+\]</span></p>
+<p>Then rain rate is estimated as follows.</p>
+<p><span class="math display">\[
+\bar{R}_{min | max} = a \left(\frac{A_{min|max} - WAA}{L}\right)^b H(A_{min|max} - WAA) \quad
+\]</span></p>
+<p><span class="math inline">\(H(x)\)</span> is the Heaviside step function, defined as:</p>
+<p><span class="math display">\[
+H(x) = \begin{cases}
+0 &amp; \text{if } x \leq 0 \\
+1 &amp; \text{if } x &gt; 0
+\end{cases}
+\]</span></p>
+<p>The baseline and WAA have already been developed in other submodules, meaning that PIA can easily be obtained. Therefore, to maintain the modular approach, the focus will be on obtaining the <span class="math inline">\(\bar{R}\)</span> from the PIA. <span class="math display">\[
+\bar{R}_{min | max} = a \left(\frac{PIA_{min|max}}{L}\right)^b H(PIA_{min|max}) \quad
+\]</span> Where PIA is defined as: <span class="math display">\[
+PIA_{min|max} = A_{min|max} - WAA
+\]</span></p>
+<p>Finally we can complute <span class="math inline">\(\bar{R}\)</span> as a weighted average of <span class="math inline">\(\bar{R}_{max}\)</span> and <span class="math inline">\(\bar{R}_{min}\)</span>: <span class="math display">\[
+\bar{R} = \alpha \bar{R}_{max} + (1 - \alpha) \bar{R}_{min} \quad
+\]</span></p>
+<p>Overeem et al.&nbsp;(2013) estimated and optimal value of <span class="math inline">\(\alpha=0.33\)</span> by calibrating the model using 12 days of data from the Netherlands. We use this value as a reasonable default; however, it should be calibrated for each specific region and deployment.</p>
+<hr>
+<p><a href="https://github.com/rainsmore/raincell/blob/main/raincell/rrate.py#L50" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="get_overeem_et_al_2013_min_max_nms_tprate" class="level3">
+<h3 class="anchored" data-anchor-id="get_overeem_et_al_2013_min_max_nms_tprate">get_overeem_et_al_2013_min_max_nms_tprate</h3>
+<blockquote class="blockquote">
+<pre><code> get_overeem_et_al_2013_min_max_nms_tprate
+                                            (pia:xarray.core.dataset.Datas
+                                            et, cfs:xarray.core.dataset.Da
+                                            taset, cfs_assign_method:str='
+                                            nearest', alpha:float=0.3,
+                                            name_min:str='pia_min',
+                                            name_max:str='pia_max')</code></pre>
+</blockquote>
+<p><em>Compute the rain rate using the Overeem et al.&nbsp;(2013) min/max sampling approach.</em></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 6%">
+<col style="width: 25%">
+<col style="width: 34%">
+<col style="width: 34%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Default</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>pia</td>
+<td>Dataset</td>
+<td></td>
+<td>ds containing the minimum and maximum Path Integrated Attenuations (PIA)</td>
+</tr>
+<tr class="even">
+<td>cfs</td>
+<td>Dataset</td>
+<td></td>
+<td>ds containing <code>a</code> and <code>b</code>, k-R law coefficients as variable and <code>frequency</code> as dim</td>
+</tr>
+<tr class="odd">
+<td>cfs_assign_method</td>
+<td>str</td>
+<td>nearest</td>
+<td>xr.sel method used to map the pia frequencies to the cfs freqs</td>
+</tr>
+<tr class="even">
+<td>alpha</td>
+<td>float</td>
+<td>0.3</td>
+<td>weighting factor between max and min sampling rain rates</td>
+</tr>
+<tr class="odd">
+<td>name_min</td>
+<td>str</td>
+<td>pia_min</td>
+<td>Name of the variable containing minimum PIA</td>
+</tr>
+<tr class="even">
+<td>name_max</td>
+<td>str</td>
+<td>pia_max</td>
+<td>Name of the variable containing maximum PIA</td>
+</tr>
+<tr class="odd">
+<td><strong>Returns</strong></td>
+<td><strong>Dataset</strong></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<div id="ea80d94d" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>tprate <span class="op">=</span> get_overeem_et_al_2013_min_max_nms_tprate(pia, alcoba_2019_africa_coefs())</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>tprate</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div><svg style="position: absolute; width: 0; height: 0; overflow: hidden">
+<defs>
+<symbol id="icon-database" viewbox="0 0 32 32">
+<path d="M16 0c-8.837 0-16 2.239-16 5v4c0 2.761 7.163 5 16 5s16-2.239 16-5v-4c0-2.761-7.163-5-16-5z"></path>
+<path d="M16 17c-8.837 0-16-2.239-16-5v6c0 2.761 7.163 5 16 5s16-2.239 16-5v-6c0 2.761-7.163 5-16 5z"></path>
+<path d="M16 26c-8.837 0-16-2.239-16-5v6c0 2.761 7.163 5 16 5s16-2.239 16-5v-6c0 2.761-7.163 5-16 5z"></path>
+</symbol>
+<symbol id="icon-file-text2" viewbox="0 0 32 32">
+<path d="M28.681 7.159c-0.694-0.947-1.662-2.053-2.724-3.116s-2.169-2.030-3.116-2.724c-1.612-1.182-2.393-1.319-2.841-1.319h-15.5c-1.378 0-2.5 1.121-2.5 2.5v27c0 1.378 1.122 2.5 2.5 2.5h23c1.378 0 2.5-1.122 2.5-2.5v-19.5c0-0.448-0.137-1.23-1.319-2.841zM24.543 5.457c0.959 0.959 1.712 1.825 2.268 2.543h-4.811v-4.811c0.718 0.556 1.584 1.309 2.543 2.268zM28 29.5c0 0.271-0.229 0.5-0.5 0.5h-23c-0.271 0-0.5-0.229-0.5-0.5v-27c0-0.271 0.229-0.5 0.5-0.5 0 0 15.499-0 15.5 0v7c0 0.552 0.448 1 1 1h7v19.5z"></path>
+<path d="M23 26h-14c-0.552 0-1-0.448-1-1s0.448-1 1-1h14c0.552 0 1 0.448 1 1s-0.448 1-1 1z"></path>
+<path d="M23 22h-14c-0.552 0-1-0.448-1-1s0.448-1 1-1h14c0.552 0 1 0.448 1 1s-0.448 1-1 1z"></path>
+<path d="M23 18h-14c-0.552 0-1-0.448-1-1s0.448-1 1-1h14c0.552 0 1 0.448 1 1s-0.448 1-1 1z"></path>
+</symbol>
+</defs>
+</svg>
+<style>/* CSS stylesheet for displaying xarray objects in notebooks */
+
+:root {
+  --xr-font-color0: var(
+    --jp-content-font-color0,
+    var(--pst-color-text-base rgba(0, 0, 0, 1))
+  );
+  --xr-font-color2: var(
+    --jp-content-font-color2,
+    var(--pst-color-text-base, rgba(0, 0, 0, 0.54))
+  );
+  --xr-font-color3: var(
+    --jp-content-font-color3,
+    var(--pst-color-text-base, rgba(0, 0, 0, 0.38))
+  );
+  --xr-border-color: var(
+    --jp-border-color2,
+    hsl(from var(--pst-color-on-background, white) h s calc(l - 10))
+  );
+  --xr-disabled-color: var(
+    --jp-layout-color3,
+    hsl(from var(--pst-color-on-background, white) h s calc(l - 40))
+  );
+  --xr-background-color: var(
+    --jp-layout-color0,
+    var(--pst-color-on-background, white)
+  );
+  --xr-background-color-row-even: var(
+    --jp-layout-color1,
+    hsl(from var(--pst-color-on-background, white) h s calc(l - 5))
+  );
+  --xr-background-color-row-odd: var(
+    --jp-layout-color2,
+    hsl(from var(--pst-color-on-background, white) h s calc(l - 15))
+  );
+}
+
+html[theme="dark"],
+html[data-theme="dark"],
+body[data-theme="dark"],
+body.vscode-dark {
+  --xr-font-color0: var(
+    --jp-content-font-color0,
+    var(--pst-color-text-base, rgba(255, 255, 255, 1))
+  );
+  --xr-font-color2: var(
+    --jp-content-font-color2,
+    var(--pst-color-text-base, rgba(255, 255, 255, 0.54))
+  );
+  --xr-font-color3: var(
+    --jp-content-font-color3,
+    var(--pst-color-text-base, rgba(255, 255, 255, 0.38))
+  );
+  --xr-border-color: var(
+    --jp-border-color2,
+    hsl(from var(--pst-color-on-background, #111111) h s calc(l + 10))
+  );
+  --xr-disabled-color: var(
+    --jp-layout-color3,
+    hsl(from var(--pst-color-on-background, #111111) h s calc(l + 40))
+  );
+  --xr-background-color: var(
+    --jp-layout-color0,
+    var(--pst-color-on-background, #111111)
+  );
+  --xr-background-color-row-even: var(
+    --jp-layout-color1,
+    hsl(from var(--pst-color-on-background, #111111) h s calc(l + 5))
+  );
+  --xr-background-color-row-odd: var(
+    --jp-layout-color2,
+    hsl(from var(--pst-color-on-background, #111111) h s calc(l + 15))
+  );
+}
+
+.xr-wrap {
+  display: block !important;
+  min-width: 300px;
+  max-width: 700px;
+  line-height: 1.6;
+}
+
+.xr-text-repr-fallback {
+  /* fallback to plain text repr when CSS is not injected (untrusted notebook) */
+  display: none;
+}
+
+.xr-header {
+  padding-top: 6px;
+  padding-bottom: 6px;
+  margin-bottom: 4px;
+  border-bottom: solid 1px var(--xr-border-color);
+}
+
+.xr-header > div,
+.xr-header > ul {
+  display: inline;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.xr-obj-type,
+.xr-obj-name,
+.xr-group-name {
+  margin-left: 2px;
+  margin-right: 10px;
+}
+
+.xr-group-name::before {
+  content: "📁";
+  padding-right: 0.3em;
+}
+
+.xr-group-name,
+.xr-obj-type {
+  color: var(--xr-font-color2);
+}
+
+.xr-sections {
+  padding-left: 0 !important;
+  display: grid;
+  grid-template-columns: 150px auto auto 1fr 0 20px 0 20px;
+  margin-block-start: 0;
+  margin-block-end: 0;
+}
+
+.xr-section-item {
+  display: contents;
+}
+
+.xr-section-item input {
+  display: inline-block;
+  opacity: 0;
+  height: 0;
+  margin: 0;
+}
+
+.xr-section-item input + label {
+  color: var(--xr-disabled-color);
+  border: 2px solid transparent !important;
+}
+
+.xr-section-item input:enabled + label {
+  cursor: pointer;
+  color: var(--xr-font-color2);
+}
+
+.xr-section-item input:focus + label {
+  border: 2px solid var(--xr-font-color0) !important;
+}
+
+.xr-section-item input:enabled + label:hover {
+  color: var(--xr-font-color0);
+}
+
+.xr-section-summary {
+  grid-column: 1;
+  color: var(--xr-font-color2);
+  font-weight: 500;
+}
+
+.xr-section-summary > span {
+  display: inline-block;
+  padding-left: 0.5em;
+}
+
+.xr-section-summary-in:disabled + label {
+  color: var(--xr-font-color2);
+}
+
+.xr-section-summary-in + label:before {
+  display: inline-block;
+  content: "►";
+  font-size: 11px;
+  width: 15px;
+  text-align: center;
+}
+
+.xr-section-summary-in:disabled + label:before {
+  color: var(--xr-disabled-color);
+}
+
+.xr-section-summary-in:checked + label:before {
+  content: "▼";
+}
+
+.xr-section-summary-in:checked + label > span {
+  display: none;
+}
+
+.xr-section-summary,
+.xr-section-inline-details {
+  padding-top: 4px;
+}
+
+.xr-section-inline-details {
+  grid-column: 2 / -1;
+}
+
+.xr-section-details {
+  display: none;
+  grid-column: 1 / -1;
+  margin-top: 4px;
+  margin-bottom: 5px;
+}
+
+.xr-section-summary-in:checked ~ .xr-section-details {
+  display: contents;
+}
+
+.xr-group-box {
+  display: inline-grid;
+  grid-template-columns: 0px 20px auto;
+  width: 100%;
+}
+
+.xr-group-box-vline {
+  grid-column-start: 1;
+  border-right: 0.2em solid;
+  border-color: var(--xr-border-color);
+  width: 0px;
+}
+
+.xr-group-box-hline {
+  grid-column-start: 2;
+  grid-row-start: 1;
+  height: 1em;
+  width: 20px;
+  border-bottom: 0.2em solid;
+  border-color: var(--xr-border-color);
+}
+
+.xr-group-box-contents {
+  grid-column-start: 3;
+}
+
+.xr-array-wrap {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 20px auto;
+}
+
+.xr-array-wrap > label {
+  grid-column: 1;
+  vertical-align: top;
+}
+
+.xr-preview {
+  color: var(--xr-font-color3);
+}
+
+.xr-array-preview,
+.xr-array-data {
+  padding: 0 5px !important;
+  grid-column: 2;
+}
+
+.xr-array-data,
+.xr-array-in:checked ~ .xr-array-preview {
+  display: none;
+}
+
+.xr-array-in:checked ~ .xr-array-data,
+.xr-array-preview {
+  display: inline-block;
+}
+
+.xr-dim-list {
+  display: inline-block !important;
+  list-style: none;
+  padding: 0 !important;
+  margin: 0;
+}
+
+.xr-dim-list li {
+  display: inline-block;
+  padding: 0;
+  margin: 0;
+}
+
+.xr-dim-list:before {
+  content: "(";
+}
+
+.xr-dim-list:after {
+  content: ")";
+}
+
+.xr-dim-list li:not(:last-child):after {
+  content: ",";
+  padding-right: 5px;
+}
+
+.xr-has-index {
+  font-weight: bold;
+}
+
+.xr-var-list,
+.xr-var-item {
+  display: contents;
+}
+
+.xr-var-item > div,
+.xr-var-item label,
+.xr-var-item > .xr-var-name span {
+  background-color: var(--xr-background-color-row-even);
+  border-color: var(--xr-background-color-row-odd);
+  margin-bottom: 0;
+  padding-top: 2px;
+}
+
+.xr-var-item > .xr-var-name:hover span {
+  padding-right: 5px;
+}
+
+.xr-var-list > li:nth-child(odd) > div,
+.xr-var-list > li:nth-child(odd) > label,
+.xr-var-list > li:nth-child(odd) > .xr-var-name span {
+  background-color: var(--xr-background-color-row-odd);
+  border-color: var(--xr-background-color-row-even);
+}
+
+.xr-var-name {
+  grid-column: 1;
+}
+
+.xr-var-dims {
+  grid-column: 2;
+}
+
+.xr-var-dtype {
+  grid-column: 3;
+  text-align: right;
+  color: var(--xr-font-color2);
+}
+
+.xr-var-preview {
+  grid-column: 4;
+}
+
+.xr-index-preview {
+  grid-column: 2 / 5;
+  color: var(--xr-font-color2);
+}
+
+.xr-var-name,
+.xr-var-dims,
+.xr-var-dtype,
+.xr-preview,
+.xr-attrs dt {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 10px;
+}
+
+.xr-var-name:hover,
+.xr-var-dims:hover,
+.xr-var-dtype:hover,
+.xr-attrs dt:hover {
+  overflow: visible;
+  width: auto;
+  z-index: 1;
+}
+
+.xr-var-attrs,
+.xr-var-data,
+.xr-index-data {
+  display: none;
+  border-top: 2px dotted var(--xr-background-color);
+  padding-bottom: 20px !important;
+  padding-top: 10px !important;
+}
+
+.xr-var-attrs-in + label,
+.xr-var-data-in + label,
+.xr-index-data-in + label {
+  padding: 0 1px;
+}
+
+.xr-var-attrs-in:checked ~ .xr-var-attrs,
+.xr-var-data-in:checked ~ .xr-var-data,
+.xr-index-data-in:checked ~ .xr-index-data {
+  display: block;
+}
+
+.xr-var-data > table {
+  float: right;
+}
+
+.xr-var-data > pre,
+.xr-index-data > pre,
+.xr-var-data > table > tbody > tr {
+  background-color: transparent !important;
+}
+
+.xr-var-name span,
+.xr-var-data,
+.xr-index-name div,
+.xr-index-data,
+.xr-attrs {
+  padding-left: 25px !important;
+}
+
+.xr-attrs,
+.xr-var-attrs,
+.xr-var-data,
+.xr-index-data {
+  grid-column: 1 / -1;
+}
+
+dl.xr-attrs {
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: 125px auto;
+}
+
+.xr-attrs dt,
+.xr-attrs dd {
+  padding: 0;
+  margin: 0;
+  float: left;
+  padding-right: 10px;
+  width: auto;
+}
+
+.xr-attrs dt {
+  font-weight: normal;
+  grid-column: 1;
+}
+
+.xr-attrs dt:hover span {
+  display: inline-block;
+  background: var(--xr-background-color);
+  padding-right: 10px;
+}
+
+.xr-attrs dd {
+  grid-column: 2;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.xr-icon-database,
+.xr-icon-file-text2,
+.xr-no-icon {
+  display: inline-block;
+  vertical-align: middle;
+  width: 1em;
+  height: 1.5em !important;
+  stroke-width: 0;
+  stroke: currentColor;
+  fill: currentColor;
+}
+
+.xr-var-attrs-in:checked + label > .xr-icon-file-text2,
+.xr-var-data-in:checked + label > .xr-icon-database,
+.xr-index-data-in:checked + label > .xr-icon-database {
+  color: var(--xr-font-color0);
+  filter: drop-shadow(1px 1px 5px var(--xr-font-color2));
+  stroke-width: 0.8px;
+}
+</style><pre class="xr-text-repr-fallback">&lt;xarray.Dataset&gt; Size: 18MB
+Dimensions:      (cml_id: 126, sublink_id: 6, time: 2964)
+Coordinates: (10)
+Data variables:
+    tprate       (cml_id, sublink_id, time) float64 18MB 0.0 0.0 0.0 ... 0.0 0.0</pre><div class="xr-wrap" style="display:none"><div class="xr-header"><div class="xr-obj-type">xarray.Dataset</div></div><ul class="xr-sections"><li class="xr-section-item"><input id="section-774a2a2f-c2b3-4c43-bdcd-abe769b056a8" class="xr-section-summary-in" type="checkbox" disabled=""><label for="section-774a2a2f-c2b3-4c43-bdcd-abe769b056a8" class="xr-section-summary" title="Expand/collapse section">Dimensions:</label><div class="xr-section-inline-details"><ul class="xr-dim-list"><li><span class="xr-has-index">cml_id</span>: 126</li><li><span class="xr-has-index">sublink_id</span>: 6</li><li><span class="xr-has-index">time</span>: 2964</li></ul></div><div class="xr-section-details"></div></li><li class="xr-section-item"><input id="section-c111c422-cdc0-4ff9-a889-16cd2f51ce19" class="xr-section-summary-in" type="checkbox"><label for="section-c111c422-cdc0-4ff9-a889-16cd2f51ce19" class="xr-section-summary">Coordinates: <span>(10)</span></label><div class="xr-section-inline-details"></div><div class="xr-section-details"><ul class="xr-var-list"><li class="xr-var-item"><div class="xr-var-name"><span class="xr-has-index">cml_id</span></div><div class="xr-var-dims">(cml_id)</div><div class="xr-var-dtype">&lt;U19</div><div class="xr-var-preview xr-preview">'3.984686N-9.789517E' ... '4.095...</div><input id="attrs-9722ae54-88d6-42aa-b4e7-9d5cd7845383" class="xr-var-attrs-in" type="checkbox"><label for="attrs-9722ae54-88d6-42aa-b4e7-9d5cd7845383" title="Show/Hide attributes"><svg class="icon xr-icon-file-text2"><use href="#icon-file-text2"></use></svg></label><input id="data-b1dce97c-1810-4fda-9797-3adef7ef94a7" class="xr-var-data-in" type="checkbox"><label for="data-b1dce97c-1810-4fda-9797-3adef7ef94a7" title="Show/Hide data repr"><svg class="icon xr-icon-database"><use href="#icon-database"></use></svg></label><div class="xr-var-attrs"><dl class="xr-attrs"><dt><span>long_name :</span></dt><dd>commercial_microwave_link_identifier</dd></dl></div><div class="xr-var-data"><pre>array(['3.984686N-9.789517E', '3.985691N-9.801648E', '3.996996N-9.761328E',
+       '4.002892N-9.746861E', '4.007006N-9.767519E', '4.008236N-9.788792E',
+       '4.013028N-9.703569E', '4.013180N-9.765819E', '4.014916N-9.732514E',
+       '4.015776N-9.756458E', '4.016656N-9.736544E', '4.016736N-9.764944E',
+       '4.016944N-9.753305E', '4.016962N-9.726686E', '4.017736N-9.748042E',
+       '4.018721N-9.762325E', '4.018764N-9.746583E', '4.019750N-9.767776E',
+       '4.019930N-9.759403E', '4.020440N-9.708914E', '4.021256N-9.746180E',
+       '4.021528N-9.798792E', '4.024043N-9.680260E', '4.024381N-9.733274E',
+       '4.024750N-9.697977E', '4.025125N-9.770912E', '4.025270N-9.739593E',
+       '4.025625N-9.735889E', '4.025880N-9.703252E', '4.026149N-9.695650E',
+       '4.028700N-9.729934E', '4.028708N-9.703542E', '4.029412N-9.691581E',
+       '4.030556N-9.705569E', '4.030907N-9.694160E', '4.031399N-9.698080E',
+       '4.032132N-9.730055E', '4.032560N-9.713835E', '4.033181N-9.761500E',
+       '4.033883N-9.691732E', '4.034149N-9.772296E', '4.034701N-9.729347E',
+       '4.035134N-9.697875E', '4.035679N-9.685969E', '4.037778N-9.767028E',
+       '4.038505N-9.704950E', '4.039270N-9.722472E', '4.039580N-9.737019E',
+       '4.040098N-9.700828E', '4.040792N-9.776750E', '4.041057N-9.688122E',
+       '4.041068N-9.758319E', '4.041256N-9.730708E', '4.041347N-9.773597E',
+       '4.042298N-9.740333E', '4.042502N-9.716614E', '4.042568N-9.698128E',
+       '4.042817N-9.705986E', '4.043833N-9.687306E', '4.043927N-9.704314E',
+       '4.044597N-9.727069E', '4.044736N-9.710024E', '4.047503N-9.718511E',
+       '4.048013N-9.705195E', '4.048153N-9.698625E', '4.048916N-9.707667E',
+       '4.049925N-9.774582E', '4.050150N-9.740475E', '4.050347N-9.703473E',
+       '4.050528N-9.753875E', '4.052083N-9.788583E', '4.054458N-9.763403E',
+       '4.055917N-9.752681E', '4.056070N-9.768000E', '4.056121N-9.742152E',
+       '4.056639N-9.747222E', '4.056847N-9.738556E', '4.056959N-9.742472E',
+       '4.057459N-9.765805E', '4.058236N-9.768889E', '4.058746N-9.717759E',
+       '4.058868N-9.752014E', '4.059014N-9.759348E', '4.059486N-9.711928E',
+       '4.059995N-9.755237E', '4.060816N-9.773042E', '4.061585N-9.744609E',
+       '4.062778N-9.705333E', '4.062903N-9.717026E', '4.064425N-9.761904E',
+       '4.065399N-9.711476E', '4.066549N-9.795621E', '4.067820N-9.720067E',
+       '4.068528N-9.726056E', '4.069079N-9.713870E', '4.071390N-9.727304E',
+       '4.072442N-9.739396E', '4.072503N-9.771625E', '4.074162N-9.717861E',
+       '4.074764N-9.753625E', '4.075098N-9.719528E', '4.075836N-9.783931E',
+       '4.076554N-9.759058E', '4.078069N-9.720598E', '4.078309N-9.751204E',
+       '4.079211N-9.793847E', '4.079299N-9.747812E', '4.079652N-9.763472E',
+       '4.080070N-9.789737E', '4.080399N-9.753111E', '4.081654N-9.761180E',
+       '4.082815N-9.790491E', '4.083040N-9.782281E', '4.083986N-9.756718E',
+       '4.084496N-9.740917E', '4.084732N-9.745625E', '4.085795N-9.784833E',
+       '4.086056N-9.752500E', '4.086283N-9.759477E', '4.086545N-9.797375E',
+       '4.088385N-9.755778E', '4.089034N-9.734926E', '4.089819N-9.752833E',
+       '4.090565N-9.765189E', '4.091611N-9.732743E', '4.095631N-9.742507E'],
+      dtype='&lt;U19')</pre></div></li><li class="xr-var-item"><div class="xr-var-name"><span class="xr-has-index">sublink_id</span></div><div class="xr-var-dims">(sublink_id)</div><div class="xr-var-dtype">&lt;U3</div><div class="xr-var-preview xr-preview">'0_0' '0_1' '1_0' '1_1' '2_0' '2_1'</div><input id="attrs-d52a2342-8f76-4cba-82fd-350a1e9773af" class="xr-var-attrs-in" type="checkbox"><label for="attrs-d52a2342-8f76-4cba-82fd-350a1e9773af" title="Show/Hide attributes"><svg class="icon xr-icon-file-text2"><use href="#icon-file-text2"></use></svg></label><input id="data-aacd865b-2be7-4eb7-8619-a94f28ddd0f9" class="xr-var-data-in" type="checkbox"><label for="data-aacd865b-2be7-4eb7-8619-a94f28ddd0f9" title="Show/Hide data repr"><svg class="icon xr-icon-database"><use href="#icon-database"></use></svg></label><div class="xr-var-attrs"><dl class="xr-attrs"><dt><span>long_name :</span></dt><dd>sublink_identifier</dd></dl></div><div class="xr-var-data"><pre>array(['0_0', '0_1', '1_0', '1_1', '2_0', '2_1'], dtype='&lt;U3')</pre></div></li><li class="xr-var-item"><div class="xr-var-name"><span class="xr-has-index">time</span></div><div class="xr-var-dims">(time)</div><div class="xr-var-dtype">datetime64[ns]</div><div class="xr-var-preview xr-preview">2019-07-01T00:05:00 ... 2019-07-...</div><input id="attrs-f6e8c04a-ca05-48c8-8793-e927324b5e40" class="xr-var-attrs-in" type="checkbox"><label for="attrs-f6e8c04a-ca05-48c8-8793-e927324b5e40" title="Show/Hide attributes"><svg class="icon xr-icon-file-text2"><use href="#icon-file-text2"></use></svg></label><input id="data-c65dc7b2-4d6b-4e28-bca7-56575c2bd6a6" class="xr-var-data-in" type="checkbox"><label for="data-c65dc7b2-4d6b-4e28-bca7-56575c2bd6a6" title="Show/Hide data repr"><svg class="icon xr-icon-database"><use href="#icon-database"></use></svg></label><div class="xr-var-attrs"><dl class="xr-attrs"><dt><span>long_name :</span></dt><dd>time_utc</dd></dl></div><div class="xr-var-data"><pre>array(['2019-07-01T00:05:00.000000000', '2019-07-01T00:20:00.000000000',
+       '2019-07-01T00:35:00.000000000', ..., '2019-07-31T23:20:00.000000000',
+       '2019-07-31T23:35:00.000000000', '2019-07-31T23:50:00.000000000'],
+      shape=(2964,), dtype='datetime64[ns]')</pre></div></li><li class="xr-var-item"><div class="xr-var-name"><span>frequency</span></div><div class="xr-var-dims">(cml_id, sublink_id)</div><div class="xr-var-dtype">float64</div><div class="xr-var-preview xr-preview">1.505e+04 1.456e+04 nan ... nan nan</div><input id="attrs-9d484b44-9ea8-4e8a-b4e5-b5b97be5deb4" class="xr-var-attrs-in" type="checkbox"><label for="attrs-9d484b44-9ea8-4e8a-b4e5-b5b97be5deb4" title="Show/Hide attributes"><svg class="icon xr-icon-file-text2"><use href="#icon-file-text2"></use></svg></label><input id="data-6ce95072-203e-449b-aa8e-fcbe8e396527" class="xr-var-data-in" type="checkbox"><label for="data-6ce95072-203e-449b-aa8e-fcbe8e396527" title="Show/Hide data repr"><svg class="icon xr-icon-database"><use href="#icon-database"></use></svg></label><div class="xr-var-attrs"><dl class="xr-attrs"><dt><span>units :</span></dt><dd>MHz</dd><dt><span>long_name :</span></dt><dd>sublink_frequency</dd></dl></div><div class="xr-var-data"><pre>array([[15047., 14557.,    nan,    nan,    nan,    nan],
+       [12765., 13031.,    nan,    nan,    nan,    nan],
+       [18765., 17755.,    nan,    nan,    nan,    nan],
+       [14907., 14417.,    nan,    nan,    nan,    nan],
+       [17728., 18738.,    nan,    nan,    nan,    nan],
+       [14417., 14907.,    nan,    nan,    nan,    nan],
+       [14935., 14445.,    nan,    nan,    nan,    nan],
+       [14529., 15019.,    nan,    nan,    nan,    nan],
+       [14935., 14445.,    nan,    nan,    nan,    nan],
+       [14473., 14963.,    nan,    nan,    nan,    nan],
+       [17755., 18765.,    nan,    nan,    nan,    nan],
+       [ 8335.,  8454.,    nan,    nan,    nan,    nan],
+       [14935., 14445.,    nan,    nan,    nan,    nan],
+       [15019., 14529.,    nan,    nan,    nan,    nan],
+       [14991., 14501.,    nan,    nan,    nan,    nan],
+       [14501., 14991.,    nan,    nan,    nan,    nan],
+       [14557., 15047.,    nan,    nan,    nan,    nan],
+       [14557., 15047.,    nan,    nan,    nan,    nan],
+       [15103., 14613.,    nan,    nan,    nan,    nan],
+       [14417., 14907.,    nan,    nan,    nan,    nan],
+...
+       [14445., 14935.,    nan,    nan,    nan,    nan],
+       [14529., 15019.,    nan,    nan,    nan,    nan],
+       [17838., 18848.,    nan,    nan,    nan,    nan],
+       [ 8468.,  8349.,    nan,    nan,    nan,    nan],
+       [14417., 14907.,    nan,    nan,    nan,    nan],
+       [14935., 14445.,    nan,    nan,    nan,    nan],
+       [14991., 14501.,    nan,    nan,    nan,    nan],
+       [14417., 14907.,    nan,    nan,    nan,    nan],
+       [ 8426.,  8307.,    nan,    nan,    nan,    nan],
+       [14557., 15047.,    nan,    nan,    nan,    nan],
+       [14963., 14473.,    nan,    nan,    nan,    nan],
+       [ 8468.,  8349.,    nan,    nan,    nan,    nan],
+       [14557., 15047.,    nan,    nan,    nan,    nan],
+       [14991., 14501.,    nan,    nan,    nan,    nan],
+       [14585., 15075.,    nan,    nan,    nan,    nan],
+       [17728., 18738.,    nan,    nan,    nan,    nan],
+       [14529., 15019.,    nan,    nan,    nan,    nan],
+       [14991., 14501.,    nan,    nan,    nan,    nan],
+       [14585., 15075.,    nan,    nan,    nan,    nan],
+       [14501., 14991.,    nan,    nan,    nan,    nan]])</pre></div></li><li class="xr-var-item"><div class="xr-var-name"><span>site_0_lat</span></div><div class="xr-var-dims">(cml_id)</div><div class="xr-var-dtype">float64</div><div class="xr-var-preview xr-preview">3.993 3.993 3.997 ... 4.092 4.094</div><input id="attrs-4894fbef-0146-4a68-ad63-007f6adf003c" class="xr-var-attrs-in" type="checkbox"><label for="attrs-4894fbef-0146-4a68-ad63-007f6adf003c" title="Show/Hide attributes"><svg class="icon xr-icon-file-text2"><use href="#icon-file-text2"></use></svg></label><input id="data-2fb513f2-47eb-41ec-a381-58c235b96385" class="xr-var-data-in" type="checkbox"><label for="data-2fb513f2-47eb-41ec-a381-58c235b96385" title="Show/Hide data repr"><svg class="icon xr-icon-database"><use href="#icon-database"></use></svg></label><div class="xr-var-attrs"><dl class="xr-attrs"><dt><span>units :</span></dt><dd>degrees_in_WGS84_projection</dd><dt><span>long_name :</span></dt><dd>site_0_latitude</dd></dl></div><div class="xr-var-data"><pre>array([3.992722, 3.992722, 3.997361, 4.002553, 4.003512, 4.004194,
+       4.01775 , 4.029   , 4.009639, 4.029   , 4.015972, 4.029   ,
+       4.015972, 4.023444, 4.015972, 4.029   , 4.014417, 4.029   ,
+       4.015972, 4.029381, 4.0194  , 4.023167, 4.022056, 4.015972,
+       4.029381, 4.029   , 4.022139, 4.015972, 4.029381, 4.029381,
+       4.040819, 4.029083, 4.029381, 4.029083, 4.029381, 4.029381,
+       4.040819, 4.032   , 4.029   , 4.032433, 4.033028, 4.040819,
+       4.029381, 4.033886, 4.029   , 4.040083, 4.040819, 4.040819,
+       4.040886, 4.042306, 4.041417, 4.03875 , 4.040819, 4.029   ,
+       4.040819, 4.056559, 4.040886, 4.04244 , 4.041417, 4.043194,
+       4.041694, 4.040886, 4.04642 , 4.044694, 4.049556, 4.051333,
+       4.050192, 4.052028, 4.052444, 4.053667, 4.053694, 4.053667,
+       4.053667, 4.0585  , 4.058056, 4.053667, 4.060028, 4.053667,
+       4.0585  , 4.053667, 4.06425 , 4.053667, 4.053667, 4.060333,
+       4.053667, 4.0585  , 4.059611, 4.059583, 4.06425 , 4.066322,
+       4.063917, 4.065848, 4.06425 , 4.065667, 4.071278, 4.071389,
+       4.072222, 4.071639, 4.06425 , 4.074778, 4.070306, 4.0817  ,
+       4.074778, 4.079889, 4.081867, 4.0817  , 4.085936, 4.085936,
+       4.0817  , 4.085936, 4.081441, 4.0817  , 4.0817  , 4.074778,
+       4.085936, 4.085936, 4.0817  , 4.074778, 4.085936, 4.0817  ,
+       4.085936, 4.08679 , 4.074778, 4.08663 , 4.091944, 4.09393 ])</pre></div></li><li class="xr-var-item"><div class="xr-var-name"><span>site_0_lon</span></div><div class="xr-var-dims">(cml_id)</div><div class="xr-var-dtype">float64</div><div class="xr-var-preview xr-preview">9.787 9.787 9.764 ... 9.729 9.742</div><input id="attrs-d6f655a4-a416-441a-af5e-0e88811c8018" class="xr-var-attrs-in" type="checkbox"><label for="attrs-d6f655a4-a416-441a-af5e-0e88811c8018" title="Show/Hide attributes"><svg class="icon xr-icon-file-text2"><use href="#icon-file-text2"></use></svg></label><input id="data-79558fa0-b031-48b0-9483-14c139318a6b" class="xr-var-data-in" type="checkbox"><label for="data-79558fa0-b031-48b0-9483-14c139318a6b" title="Show/Hide data repr"><svg class="icon xr-icon-database"><use href="#icon-database"></use></svg></label><div class="xr-var-attrs"><dl class="xr-attrs"><dt><span>units :</span></dt><dd>degrees_in_WGS84_projection</dd><dt><span>long_name :</span></dt><dd>site_0_longitude</dd></dl></div><div class="xr-var-data"><pre>array([9.787167, 9.787167, 9.763806, 9.745083, 9.76732 , 9.799472,
+       9.705944, 9.767833, 9.741417, 9.767833, 9.738528, 9.767833,
+       9.738528, 9.727083, 9.738528, 9.767833, 9.744694, 9.767833,
+       9.738528, 9.696744, 9.743889, 9.792   , 9.67025 , 9.738528,
+       9.696744, 9.767833, 9.737194, 9.738528, 9.696744, 9.696744,
+       9.733028, 9.701944, 9.696744, 9.701944, 9.696744, 9.696744,
+       9.733028, 9.71564 , 9.767833, 9.691575, 9.774333, 9.733028,
+       9.696744, 9.683883, 9.767833, 9.706106, 9.733028, 9.733028,
+       9.699006, 9.774   , 9.686417, 9.762056, 9.733028, 9.767833,
+       9.733028, 9.702978, 9.699006, 9.704083, 9.686417, 9.707889,
+       9.728389, 9.699006, 9.71598 , 9.703528, 9.698333, 9.706861,
+       9.771911, 9.741306, 9.702389, 9.750917, 9.779361, 9.750917,
+       9.750917, 9.768444, 9.738694, 9.750917, 9.726194, 9.750917,
+       9.768444, 9.750917, 9.714664, 9.750917, 9.750917, 9.708444,
+       9.750917, 9.768444, 9.743528, 9.704333, 9.714664, 9.759558,
+       9.710083, 9.79152 , 9.714664, 9.722972, 9.714869, 9.729139,
+       9.736111, 9.76925 , 9.714664, 9.761667, 9.719639, 9.786083,
+       9.761667, 9.719417, 9.756825, 9.786083, 9.752944, 9.752944,
+       9.786083, 9.752944, 9.765535, 9.786083, 9.786083, 9.761667,
+       9.752944, 9.752944, 9.786083, 9.761667, 9.752944, 9.786083,
+       9.752944, 9.73381 , 9.761667, 9.76601 , 9.729444, 9.74168 ])</pre></div></li><li class="xr-var-item"><div class="xr-var-name"><span>site_1_lat</span></div><div class="xr-var-dims">(cml_id)</div><div class="xr-var-dtype">float64</div><div class="xr-var-preview xr-preview">3.977 3.979 3.997 ... 4.091 4.097</div><input id="attrs-2c638361-8d3f-4a47-8272-73359073a9e9" class="xr-var-attrs-in" type="checkbox"><label for="attrs-2c638361-8d3f-4a47-8272-73359073a9e9" title="Show/Hide attributes"><svg class="icon xr-icon-file-text2"><use href="#icon-file-text2"></use></svg></label><input id="data-5ceaca85-63fa-479d-8eef-a3d8cb75920e" class="xr-var-data-in" type="checkbox"><label for="data-5ceaca85-63fa-479d-8eef-a3d8cb75920e" title="Show/Hide data repr"><svg class="icon xr-icon-database"><use href="#icon-database"></use></svg></label><div class="xr-var-attrs"><dl class="xr-attrs"><dt><span>units :</span></dt><dd>degrees in WGS84 projection</dd><dt><span>long_name :</span></dt><dd>site_1_latitude</dd></dl></div><div class="xr-var-data"><pre>array([3.97665 , 3.97866 , 3.99663 , 4.003231, 4.0105  , 4.012278,
+       4.008306, 3.997361, 4.020194, 4.002553, 4.01734 , 4.004472,
+       4.017917, 4.01048 , 4.0195  , 4.008442, 4.023111, 4.0105  ,
+       4.023889, 4.0115  , 4.023111, 4.019889, 4.02603 , 4.03279 ,
+       4.02012 , 4.02125 , 4.0284  , 4.035278, 4.02238 , 4.022917,
+       4.01658 , 4.028333, 4.029444, 4.032028, 4.032433, 4.033417,
+       4.023444, 4.03312 , 4.037361, 4.035333, 4.03527 , 4.028583,
+       4.040886, 4.037472, 4.046556, 4.036926, 4.037722, 4.038342,
+       4.03931 , 4.039278, 4.040697, 4.043386, 4.041694, 4.053694,
+       4.043778, 4.028444, 4.04425 , 4.043194, 4.04625 , 4.044661,
+       4.0475  , 4.048586, 4.048586, 4.051333, 4.04675 , 4.0465  ,
+       4.049658, 4.048272, 4.04825 , 4.047389, 4.050472, 4.05525 ,
+       4.058167, 4.053639, 4.054186, 4.059611, 4.053667, 4.06025 ,
+       4.056417, 4.062806, 4.053242, 4.064069, 4.064361, 4.058638,
+       4.066322, 4.063131, 4.06356 , 4.065972, 4.061556, 4.062528,
+       4.06688 , 4.06725 , 4.07139 , 4.071389, 4.06688 , 4.07139 ,
+       4.072661, 4.073367, 4.084075, 4.07475 , 4.079889, 4.069972,
+       4.07833 , 4.07625 , 4.07475 , 4.076722, 4.072661, 4.073367,
+       4.07844 , 4.074861, 4.081867, 4.08393 , 4.08438 , 4.093194,
+       4.083056, 4.083528, 4.089889, 4.097333, 4.08663 , 4.091389,
+       4.090833, 4.091278, 4.104861, 4.0945  , 4.091278, 4.097333])</pre></div></li><li class="xr-var-item"><div class="xr-var-name"><span>site_1_lon</span></div><div class="xr-var-dims">(cml_id)</div><div class="xr-var-dtype">float64</div><div class="xr-var-preview xr-preview">9.792 9.816 9.759 ... 9.736 9.743</div><input id="attrs-05f23efd-0902-46c1-bf26-ca81c73ab813" class="xr-var-attrs-in" type="checkbox"><label for="attrs-05f23efd-0902-46c1-bf26-ca81c73ab813" title="Show/Hide attributes"><svg class="icon xr-icon-file-text2"><use href="#icon-file-text2"></use></svg></label><input id="data-dc85ef56-458c-465f-9371-9b1661267a79" class="xr-var-data-in" type="checkbox"><label for="data-dc85ef56-458c-465f-9371-9b1661267a79" title="Show/Hide data repr"><svg class="icon xr-icon-database"><use href="#icon-database"></use></svg></label><div class="xr-var-attrs"><dl class="xr-attrs"><dt><span>units :</span></dt><dd>degrees in WGS84 projection</dd><dt><span>long_name :</span></dt><dd>site_1_longitude</dd></dl></div><div class="xr-var-data"><pre>array([9.791866, 9.81613 , 9.75885 , 9.748639, 9.767719, 9.778111,
+       9.701194, 9.763806, 9.723611, 9.745083, 9.73456 , 9.762056,
+       9.768083, 9.72629 , 9.757556, 9.756817, 9.748472, 9.767719,
+       9.780278, 9.721083, 9.748472, 9.805583, 9.69027 , 9.72802 ,
+       9.69921 , 9.77399 , 9.741992, 9.73325 , 9.70976 , 9.694556,
+       9.72684 , 9.705139, 9.686417, 9.709194, 9.691575, 9.699417,
+       9.727083, 9.71203 , 9.755167, 9.691889, 9.77026 , 9.725667,
+       9.699006, 9.688056, 9.766222, 9.703794, 9.711917, 9.741011,
+       9.70265 , 9.7795  , 9.689827, 9.754583, 9.728389, 9.779361,
+       9.747639, 9.73025 , 9.69725 , 9.707889, 9.688194, 9.700739,
+       9.72575 , 9.721043, 9.721043, 9.706861, 9.698917, 9.708472,
+       9.777253, 9.739644, 9.704556, 9.756833, 9.797806, 9.775889,
+       9.754444, 9.767556, 9.745611, 9.743528, 9.750917, 9.734028,
+       9.763167, 9.786861, 9.720853, 9.75311 , 9.767778, 9.715412,
+       9.759558, 9.777639, 9.74569 , 9.706333, 9.719389, 9.76425 ,
+       9.71287 , 9.799722, 9.72547 , 9.729139, 9.71287 , 9.72547 ,
+       9.742681, 9.774   , 9.721058, 9.745583, 9.719417, 9.781778,
+       9.75645 , 9.721778, 9.745583, 9.801611, 9.742681, 9.774   ,
+       9.79339 , 9.753278, 9.756825, 9.7949  , 9.77848 , 9.751769,
+       9.728889, 9.738306, 9.783583, 9.743333, 9.76601 , 9.808667,
+       9.758611, 9.736042, 9.744   , 9.764367, 9.736042, 9.743333])</pre></div></li><li class="xr-var-item"><div class="xr-var-name"><span>transmitter</span></div><div class="xr-var-dims">(cml_id, sublink_id)</div><div class="xr-var-dtype">float64</div><div class="xr-var-preview xr-preview">0.0 1.0 nan nan ... nan nan nan nan</div><input id="attrs-723b4a69-d54b-4957-891b-a63ccdd551d1" class="xr-var-attrs-in" type="checkbox"><label for="attrs-723b4a69-d54b-4957-891b-a63ccdd551d1" title="Show/Hide attributes"><svg class="icon xr-icon-file-text2"><use href="#icon-file-text2"></use></svg></label><input id="data-a4c34d3e-510a-4280-8dfd-0c46afa23ad7" class="xr-var-data-in" type="checkbox"><label for="data-a4c34d3e-510a-4280-8dfd-0c46afa23ad7" title="Show/Hide data repr"><svg class="icon xr-icon-database"><use href="#icon-database"></use></svg></label><div class="xr-var-attrs"><dl class="xr-attrs"><dt><span>long_name :</span></dt><dd>transmitter_site_identifier</dd></dl></div><div class="xr-var-data"><pre>array([[ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+...
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan],
+       [ 0.,  1., nan, nan, nan, nan]])</pre></div></li><li class="xr-var-item"><div class="xr-var-name"><span>length</span></div><div class="xr-var-dims">(cml_id)</div><div class="xr-var-dtype">float64</div><div class="xr-var-preview xr-preview">1.852e+03 3.573e+03 ... 736.0 419.0</div><input id="attrs-179eadff-c949-4a93-a165-dc61d825cc6e" class="xr-var-attrs-in" type="checkbox"><label for="attrs-179eadff-c949-4a93-a165-dc61d825cc6e" title="Show/Hide attributes"><svg class="icon xr-icon-file-text2"><use href="#icon-file-text2"></use></svg></label><input id="data-3927ac3b-ec5b-4446-b6dc-bfffb7424a9f" class="xr-var-data-in" type="checkbox"><label for="data-3927ac3b-ec5b-4446-b6dc-bfffb7424a9f" title="Show/Hide data repr"><svg class="icon xr-icon-database"><use href="#icon-database"></use></svg></label><div class="xr-var-attrs"><dl class="xr-attrs"><dt><span>units :</span></dt><dd>m</dd><dt><span>long_name :</span></dt><dd>distance_between_pair_of_antennas</dd></dl></div><div class="xr-var-data"><pre>array([1852., 3573.,  556.,  402.,  774., 2535., 1170., 3527., 2296.,
+       3865.,  466., 2787., 3289., 1436., 2149., 2582., 1049., 2046.,
+       4718., 3349.,  654., 1551., 2266., 2195., 1060., 1096.,  874.,
+       2214., 1640.,  755., 2767.,  364., 1147.,  868.,  666.,  536.,
+       2032.,  420., 1683.,  323.,  516., 1581., 1297.,  610., 1950.,
+        433., 2369.,  928.,  441.,  697.,  387.,  975.,  524., 3016.,
+       1655., 4340.,  420.,  431.,  570.,  810.,  706., 2591.,  611.,
+        822.,  317.,  564.,  596.,  454.,  522.,  956., 2079., 2778.,
+        633.,  546.,  879., 1051., 2834., 2012.,  630., 4117., 1398.,
+       1176., 2214.,  796., 1697., 1142.,  498.,  741.,  603.,  669.,
+        451.,  924., 1436.,  932.,  535.,  407.,  731.,  561., 2304.,
+       1786., 1060., 1382.,  700.,  480., 1476., 1810., 1858., 2720.,
+        888., 1225.,  968., 1010.,  895., 2314., 2690., 1647.,  947.,
+       3219., 1453., 2727.,  830.,  555., 3862.,  889.,  736.,  419.])</pre></div></li></ul></div></li><li class="xr-section-item"><input id="section-c4a0b472-095d-46d5-84d7-99641adc9459" class="xr-section-summary-in" type="checkbox" checked=""><label for="section-c4a0b472-095d-46d5-84d7-99641adc9459" class="xr-section-summary">Data variables: <span>(1)</span></label><div class="xr-section-inline-details"></div><div class="xr-section-details"><ul class="xr-var-list"><li class="xr-var-item"><div class="xr-var-name"><span>tprate</span></div><div class="xr-var-dims">(cml_id, sublink_id, time)</div><div class="xr-var-dtype">float64</div><div class="xr-var-preview xr-preview">0.0 0.0 0.0 0.0 ... 0.0 0.0 0.0 0.0</div><input id="attrs-d8f9f98c-8848-4bad-9c6a-79564666d842" class="xr-var-attrs-in" type="checkbox"><label for="attrs-d8f9f98c-8848-4bad-9c6a-79564666d842" title="Show/Hide attributes"><svg class="icon xr-icon-file-text2"><use href="#icon-file-text2"></use></svg></label><input id="data-3c6371c3-9c1c-468c-9e39-faa5d8820d48" class="xr-var-data-in" type="checkbox"><label for="data-3c6371c3-9c1c-468c-9e39-faa5d8820d48" title="Show/Hide data repr"><svg class="icon xr-icon-database"><use href="#icon-database"></use></svg></label><div class="xr-var-attrs"><dl class="xr-attrs"><dt><span>long_name :</span></dt><dd>time_mean_path_averaged_rain_rate</dd><dt><span>units :</span></dt><dd>mm/h</dd></dl></div><div class="xr-var-data"><pre>array([[[0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.]],
+
+       [[0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.]],
+
+       [[0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.]],
+...
+       [[0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.]],
+
+       [[0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.]],
+
+       [[0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.]]], shape=(126, 6, 2964))</pre></div></li></ul></div></li></ul></div></div>
+</div>
+</div>
+<div id="e0273eb1" class="cell">
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="13_rain_rate_files/figure-html/cell-7-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<section id="references" class="level4">
+<h4 class="anchored" data-anchor-id="references">References</h4>
+<ul>
+<li>Alcoba Kait, M. 2019. A contribution to rainfall observation in Africa from polarimetric weather radar and commercial microwave links. Ph.D.&nbsp;dissertation, Université Paul Sabatier – Toulouse III, 202 pages. https://tel-02955598 (accessed 2025‑11‑21).</li>
+<li>Overeem, A., H. Leijnse, and R. Uijlenhoet, 2013: Country-wide rainfall maps from cellular communication networks. Proceedings of the National Academy of Sciences, 110, 2741–2745, doi:10.1073/pnas.1217961110.</li>
+<li>Chwala, C., and H. Kunstmann, 2019: Commercial Microwave Link Networks for rainfall observation: Assessment of the current status and future challenges. WIREs Water, 6, doi:10.1002/wat2.1337.</li>
+</ul>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/rainsmore\.github\.io\/raincell");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/rainsmore/raincell/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
