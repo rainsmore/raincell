@@ -36,7 +36,7 @@ def alcoba_2019_africa_coefs() -> xr.Dataset:
     coefs["frequency"].attrs["units"] = "MHz"
     return coefs   
 
-# %% ../nbs/13_rain_rate.ipynb 15
+# %% ../nbs/13_rain_rate.ipynb 16
 def reindex_coefs(
         pia: xr.Dataset, # ds containing path integrated attenuation
         coefs: xr.Dataset, # ds containing a and b, k-R law coefficients with frequency dim
@@ -46,7 +46,7 @@ def reindex_coefs(
     coefs = coefs.sel(frequency=pia.frequency, method=method)
     return coefs.drop_vars([c for c in coefs.coords if c not in coefs.dims])
 
-# %% ../nbs/13_rain_rate.ipynb 22
+# %% ../nbs/13_rain_rate.ipynb 23
 def get_overeem_et_al_2013_min_max_nms_tprate(
         pia: xr.Dataset, # ds containing the minimum and maximum Path Integrated Attenuations (PIA)
         cfs: xr.Dataset, # ds containing `a` and `b`, k-R law coefficients as variable and `frequency` as dim
