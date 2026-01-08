@@ -9,3 +9,4 @@ website:
       - 12_waa.ipynb
       - 13_rain_rate.ipynb
       - 20_plot.romulo.ipynb
+      - 21_maps.vector.ipynb
