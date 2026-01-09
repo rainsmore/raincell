@@ -24,7 +24,7 @@ def setup_default_map(m: folium.Map = None, show: str = "Esri.WorldImagery") -> 
     folium.LayerControl().add_to(m)
     folium.plugins.Fullscreen(position="topright",force_separate_button=True).add_to(m)
     folium.plugins.Geocoder(collapsed=True, add_marker=False).add_to(m)
-    folium.plugins.MeasureControl(position="bottomleft").add_to(m)
+    folium.plugins.MeasureControl(position="bottomright").add_to(m)
     return m
 
 # %% ../../nbs/21_maps.vector.ipynb 8
