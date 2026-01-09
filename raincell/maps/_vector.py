@@ -6,7 +6,7 @@
 __all__ = ['setup_default_map', 'explore_links', 'explore_sublinks']
 
 # %% ../../nbs/21_maps.vector.ipynb 2
-from typing import Callable
+from typing import Callable, Literal
 
 import xarray as xr
 import geopandas as gpd
@@ -17,7 +17,11 @@ from shapely.geometry import LineString
 from .. import open_cml_sample
 
 # %% ../../nbs/21_maps.vector.ipynb 5
-def setup_default_map(m: folium.Map = None, show: str = "Esri.WorldImagery") -> folium.Map:
+def setup_default_map(
+        m: folium.Map = None, # Optional folium map to be setup with basemaps and controls
+        show: Literal["OpenStreetMap", "OpenTopoMap", "Esri.WorldImagery"] = "Esri.WorldImagery" # Basemap to show by default.
+        ) -> folium.Map:
+    """ Create a default folium map with common basemaps, layers and controls."""
     m = m or folium.Map(tiles=None)
     for tile in ["OpenStreetMap", "OpenTopoMap", "Esri.WorldImagery"]:
         folium.TileLayer(tile, name=tile, show=(tile==show)).add_to(m)
@@ -59,9 +63,9 @@ def explore_links(
     cml: xr.Dataset | xr.DataArray, # CML in OpenSense standard
     default: Callable = setup_default_map, # Function to set up a default map including for example basemaps or controls
     copy_cml_id_on_rclick: bool = True, # Enable copying cml_id to clipboard when right clicking on a link
-    **explore_kwargs # kwargs to be passed to the GeoPandas explore [method](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.explore.html) 
+    **explore_kwargs
     ) -> folium.Map:
-    """ Geopandas explore wrapper to visualize CML link structure """
+    """ Geopandas [explore](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.explore.html) wrapper to visualize CML link structure """
     links_df = cml.cml_id.to_dataframe().drop_duplicates()
     geom = [LineString([(l.site_0_lon, l.site_0_lat), (l.site_1_lon, l.site_1_lat)]) for _, l in links_df.iterrows()]
     links_gdf = gpd.GeoDataFrame(links_df["length"], geometry=geom, crs="EPSG:4326")
@@ -127,9 +131,9 @@ def explore_sublinks(
     default: Callable = setup_default_map, # Function to set up a default map including for example basemaps or controls
     add_transmission_sense: bool = True, # If true it will overlay an arrow over each sublink showing the sense of the signal
     cp_id_on_rclick: bool = True, # Enable copying cml_id and sublink_id when right clicking on a sublink
-    **explore_kwargs # kwargs to be passed to the GeoPandas explore [method](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.explore.html) 
+    **explore_kwargs
     ) -> folium.Map:
-    """ Geopandas explore wrapper to visualize CML sublink structure by coloring on frequency """
+    """ Geopandas [explore](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.explore.html) wrapper to visualize CML sublink structure by coloring on frequency """
     sublinks_df = cml[["cml_id", "sublink_id"]].to_dataframe().reset_index()
     sublinks_df = sublinks_df.dropna(subset="frequency").reset_index(drop=True)
 
