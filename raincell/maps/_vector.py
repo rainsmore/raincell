@@ -199,7 +199,7 @@ def explore_data(
     gdf = gdf.sort_values(by=["time", "cml_id", "sublink_id"])
     gdf.drop(columns="time", inplace=True)
 
-    m = explore_sublinks(cml.to_dataset()) # Remove .to_dataset() when explore_sublinks will accept xr.DataArray
+    m = explore_sublinks(cml.to_dataset(), show=False) # Remove .to_dataset() when explore_sublinks will accept xr.DataArray
     folium.plugins.TimestampedGeoJson(
         gdf.__geo_interface__,
         period="PT15M",
