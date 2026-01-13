@@ -22,11 +22,11 @@ from .. import open_cml_sample
 # %% ../../nbs/21_maps.vector.ipynb 5
 def setup_default_map(
         m: folium.Map = None, # Optional folium map to be setup with basemaps and controls
-        show: Literal["OpenStreetMap", "OpenTopoMap", "Esri.WorldImagery"] = "Esri.WorldImagery" # Basemap to show by default.
+        show: Literal["OpenStreetMap", "OpenTopoMap", "Esri.WorldImagery", "Esri.WorldGrayCanvas"] = "Esri.WorldImagery" # Basemap to show by default.
         ) -> folium.Map:
     """ Create a default folium map with common basemaps, layers and controls."""
     m = m or folium.Map(tiles=None)
-    for tile in ["OpenStreetMap", "OpenTopoMap", "Esri.WorldImagery"]:
+    for tile in ["OpenStreetMap", "OpenTopoMap", "Esri.WorldImagery", "Esri.WorldGrayCanvas"]:
         folium.TileLayer(tile, name=tile, show=(tile==show)).add_to(m)
     folium.LayerControl().add_to(m)
     folium.plugins.Fullscreen(position="topright",force_separate_button=True).add_to(m)
