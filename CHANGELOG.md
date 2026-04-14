@@ -2,6 +2,14 @@
 
 <!-- do not remove -->
 
+## 0.2.3
+
+### New Features
+
+- Display missing data with a different color in gauges romulo plot ([#55](https://github.com/rainsmore/raincell/issues/55))
+
+
+
 ## 0.2.2
 ### Breaking Changes
 
