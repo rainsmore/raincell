@@ -47,7 +47,7 @@ def romulo_plot_cml(
     
     return fig, ax
 
-# %% ../../nbs/20_plot.romulo.ipynb #2abe46b6
+# %% ../../nbs/20_plot.romulo.ipynb #46935421
 def romulo_plot_gauges(
         gauges: xr.DataArray, # Gauge data to plot
         fig: plt.Figure = None, 
@@ -63,6 +63,7 @@ def romulo_plot_gauges(
 
     cmap = plt.cm.Blues.copy()
     cmap.set_under('red')
+    cmap.set_bad("black")
     
     if fig is None or ax is None:
         fig, ax = plt.subplots(figsize=figsize)
