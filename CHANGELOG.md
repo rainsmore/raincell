@@ -2,6 +2,16 @@
 
 <!-- do not remove -->
 
+## 0.2.2
+### Breaking Changes
+
+- Migrate from nbdev2 to nbdev3 ([#54](https://github.com/rainsmore/raincell/pull/54))
+
+### Bugs
+
+- Allow plotting single gauge data in romulo plot ([#52](https://github.com/rainsmore/raincell/pull/52))
+
+
 ## 0.2.1
 
 ### New Features
