@@ -1,3 +1,33 @@
 [build-system]
-requires = ["setuptools>=64.0"]
+requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "raincell"
+dynamic = ["version"]
+description = "A user-friendly Python library for transforming commercial microwave links into rain estimation insights. Built with nbdev and Jupyter notebooks, this tool offers robust scientific and visualization capabilities, tailored for researchers in the field."
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "Apache-2.0"}
+authors = [{name = "Rainsmore Group - IRD", email = "marielle.gosset@ird.fr"}]
+keywords = ['cml', 'rainfall', 'opensense', 'opportunisticsensors', 'nbdev', 'jupyter', 'notebook', 'python']
+classifiers = ["Natural Language :: English", "Intended Audience :: Science/Research", "Development Status :: 3 - Alpha", "Programming Language :: Python :: 3", "Programming Language :: Python :: 3 :: Only"]
+dependencies = ['xarray', 'netcdf4', 'matplotlib', 'geopy', 'bottleneck', 'folium', 'geopandas', 'mapclassify']
+
+[project.urls]
+Repository = "https://github.com/rainsmore/raincell"
+Documentation = "https://rainsmore.github.io/raincell"
+
+[project.entry-points.nbdev]
+raincell = "raincell._modidx:d"
+
+[project.optional-dependencies]
+dev = ['nbdev==2.4.6', 'pre-commit']
+
+[tool.setuptools.dynamic]
+version = {attr = "raincell.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["raincell"]
+
+[tool.nbdev]
