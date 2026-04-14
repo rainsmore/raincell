@@ -5,20 +5,20 @@
 # %% auto #0
 __all__ = ['get_cml_sample_fp', 'open_cml_sample', 'open_gauge_sample']
 
-# %% ../nbs/01_sample_data.ipynb #1e702dd8
+# %% ../nbs/01_sample_data.ipynb #3ddf8146
 from pathlib import Path
 import xarray as xr
 from .config import SAMPLE_DATA_DIR
 
-# %% ../nbs/01_sample_data.ipynb #cd878d91
+# %% ../nbs/01_sample_data.ipynb #d364ccd4
 def get_cml_sample_fp(processing_step: str) -> Path:
     return SAMPLE_DATA_DIR / f"cml_{processing_step}_douala.nc"
 
-# %% ../nbs/01_sample_data.ipynb #bc106cc8
+# %% ../nbs/01_sample_data.ipynb #8413d195
 def available_ps():
     return [fp.stem.split("_")[1] for fp in SAMPLE_DATA_DIR.glob("cml_*_douala.nc")]
 
-# %% ../nbs/01_sample_data.ipynb #8a0fe0cf
+# %% ../nbs/01_sample_data.ipynb #40c0669a
 def open_cml_sample(processing_step: str = "raw") -> xr.Dataset|xr.DataArray:
     """Open Sample Commercial Microwave Link (CML) data at different processing steps."""
     ds = xr.load_dataset(get_cml_sample_fp(processing_step))
@@ -26,7 +26,7 @@ def open_cml_sample(processing_step: str = "raw") -> xr.Dataset|xr.DataArray:
         return ds[list(ds.data_vars)[0]]
     return ds
 
-# %% ../nbs/01_sample_data.ipynb #19fc0d19
+# %% ../nbs/01_sample_data.ipynb #bf5099ce
 def open_gauge_sample() -> xr.Dataset:
     """Open Sample rain gauge data.""" 
     return xr.load_dataset(SAMPLE_DATA_DIR / "gauges_douala.nc")
