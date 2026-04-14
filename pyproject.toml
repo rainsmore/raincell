@@ -22,7 +22,7 @@ Documentation = "https://rainsmore.github.io/raincell"
 raincell = "raincell._modidx:d"
 
 [project.optional-dependencies]
-dev = ['nbdev==2.4.6', 'pre-commit']
+dev = ['nbdev', 'pre-commit']
 
 [tool.setuptools.dynamic]
 version = {attr = "raincell.__version__"}
