@@ -22,8 +22,8 @@ def get_link_centers_opensense_v2(cml: xr.Dataset) -> pd.DataFrame:
 # %% ../../nbs/05_data.merge.ipynb #60fdcca6
 def get_gauge_coords(
         gauges: xr.Dataset, # Dataset containing gauges coordinates
-        lat: str = "gauge_lat", # Name of the latitude coordinate in the dataset
-        lon: str = "gauge_lon" # Name of the longitude coordinate in the dataset
+        lat: str = "lat", # Name of the latitude coordinate in the dataset
+        lon: str = "lon" # Name of the longitude coordinate in the dataset
     ) -> pd.DataFrame:
     """Get the coordinates of each gauge in the gauges dataset."""
     gauges_metadata = gauges[[lat, lon]].to_dataframe()
@@ -39,9 +39,9 @@ def haversine_distance(point1: pd.Series, point2: pd.Series) -> float:
 def assign_nearest_gauge_to_link_center(
         cml: xr.Dataset, # CML dataset containing link information
         gauges: xr.Dataset, # Dataset containing gauges coordinates
-        gauge_id: str = "gauge_name", # Name of the dimension of the gauge identifier in the gauges dataset
-        gauge_lat: str = "gauge_lat", # Name of the latitude coordinate in the gauges dataset
-        gauge_lon: str = "gauge_lon" # Name of the longitude coordinate in the gauges dataset
+        gauge_id: str = "id", # Name of the dimension of the gauge identifier in the gauges dataset
+        gauge_lat: str = "lat", # Name of the latitude coordinate in the gauges dataset
+        gauge_lon: str = "lon" # Name of the longitude coordinate in the gauges dataset
     ) -> xr.Dataset: # CML dataset merged with nearest gauge data and metadata
     """Assign the nearest gauge to each CML link based on geodesic distance from gauge to link center coordinates."""
     link_centers = get_link_centers_opensense_v2(cml)
