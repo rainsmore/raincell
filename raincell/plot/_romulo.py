@@ -6,6 +6,7 @@
 __all__ = ['romulo_plot_cml', 'romulo_plot_gauges', 'romulo_plot']
 
 # %% ../../nbs/20_plot.romulo.ipynb #5a7485fe
+import pandas as pd
 import xarray as xr
 import matplotlib.pyplot as plt
 from .. import open_cml_sample, open_gauge_sample
@@ -60,6 +61,14 @@ def romulo_plot_gauges(
     if len(dims) != 1:
         raise ValueError(f"Expected exactly one non-time dimension, found {len(dims)}: {dims}")
     id_dim = dims[0]
+    if len(set(gauges.time.values[1:] - gauges.time.values[:-1])) > 1:
+        err_msg = """Irregular time index detected: pcolormesh/imshow stretch cells across gaps, producing misleading plots. 
+        Please regularize the time index before plotting:
+		- e.g. `da.reindex(time=pd.date_range(..., freq='5min'))`: inserts NaN at missing steps.  Use when timestamps already 
+			align to a fixed grid/sampling rate but some are absent.
+		- e.g. `da.resample(time='5min').sum(min_count=1)`: aggregates values into regular bins. Use when timestamps don't fall 
+			on a fixed grid/sampling rate."""
+        raise IndexError(err_msg)
 
     cmap = plt.cm.Blues.copy()
     cmap.set_under('red')
