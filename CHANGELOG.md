@@ -2,6 +2,14 @@
 
 <!-- do not remove -->
 
+## 0.2.4
+
+
+### Breaking Changes
+
+- Update gauges sample to better represent real data (and update tests and example accordingly). Raise error in gauges romulo plot when irregular time index is detected. ([#57](https://github.com/rainsmore/raincell/issues/57))
+
+
 ## 0.2.3
 
 ### New Features
