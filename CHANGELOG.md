@@ -2,6 +2,14 @@
 
 <!-- do not remove -->
 
+## 0.2.5
+
+### New Features
+
+- 59 allow filtering by distance to gauge ([#60](https://github.com/rainsmore/raincell/pull/60)), thanks to [@iraind](https://github.com/iraind)
+
+
+
 ## 0.2.4
 
 
