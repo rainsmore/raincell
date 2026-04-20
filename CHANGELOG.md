@@ -10,6 +10,14 @@
 
 
 
+## 0.2.6
+
+### New Features
+
+- Add gauge data visualization and add viz stacking example ([#62](https://github.com/rainsmore/raincell/pull/62))
+
+
+
 ## 0.2.5
 
 ### New Features
