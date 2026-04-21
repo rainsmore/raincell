@@ -2,6 +2,14 @@
 
 <!-- do not remove -->
 
+## 0.2.7
+
+
+### Bugs Squashed
+
+- Fix pypi build to include all the packages ([#63](https://github.com/rainsmore/raincell/issues/63))
+
+
 ## 0.2.6
 
 ### New Features
