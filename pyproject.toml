@@ -28,6 +28,6 @@ dev = ['nbdev', 'pre-commit', 'twine']
 version = {attr = "raincell.__version__"}
 
 [tool.setuptools.packages.find]
-include = ["raincell"]
+include = ["raincell*"]
 
 [tool.nbdev]
