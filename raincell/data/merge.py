@@ -6,6 +6,7 @@
 __all__ = ['assign_nearest_gauge_to_link_center']
 
 # %% ../../nbs/05_data.merge.ipynb #edeed455
+import numpy as np
 import pandas as pd
 import xarray as xr
 from geopy.distance import geodesic
@@ -35,19 +36,48 @@ def haversine_distance(point1: pd.Series, point2: pd.Series) -> float:
     """Calculate the great circle distance between two points on Earth."""
     return geodesic((point1["lat"], point1["lon"]), (point2["lat"], point2["lon"])).kilometers
 
+# %% ../../nbs/05_data.merge.ipynb #892b80e0
+def nearest_gauge_to_link_centers(
+    cml_centers: pd.DataFrame,   # DataFrame with 'lat','lon' columns (link centers)
+    gauge_coords: pd.DataFrame # DataFrame with 'lat','lon' columns (gauge positions)
+) -> pd.DataFrame:
+    """Find the nearest gauge to each link center using vectorized haversine."""
+  
+    lat1 = np.radians(cml_centers["lat"].values[:, None])
+    lon1 = np.radians(cml_centers["lon"].values[:, None])
+    lat2 = np.radians(gauge_coords["lat"].values[None, :])
+    lon2 = np.radians(gauge_coords["lon"].values[None, :])
+    
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    a = np.sin(dlat/2)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon/2)**2
+    dist_km = 6371 * 2 * np.arcsin(np.sqrt(a))  # (n_links, n_gauges)
+    
+    idx = np.argmin(dist_km, axis=1)
+    min_dist = dist_km[np.arange(len(idx)), idx]
+    
+    return pd.DataFrame({
+        "id": gauge_coords.index[idx],
+        "distance_km": min_dist,
+    }, index=cml_centers.index)
+
 # %% ../../nbs/05_data.merge.ipynb #c7ae0f9e
 def assign_nearest_gauge_to_link_center(
         cml: xr.Dataset, # CML dataset containing link information
         gauges: xr.Dataset, # Dataset containing gauges coordinates
         gauge_id: str = "id", # Name of the dimension of the gauge identifier in the gauges dataset
         gauge_lat: str = "lat", # Name of the latitude coordinate in the gauges dataset
-        gauge_lon: str = "lon" # Name of the longitude coordinate in the gauges dataset
+        gauge_lon: str = "lon", # Name of the longitude coordinate in the gauges dataset
+        metadata_only: bool = False # Assign only nearest gauge metadata
     ) -> xr.Dataset: # CML dataset merged with nearest gauge data and metadata
     """Assign the nearest gauge to each CML link based on geodesic distance from gauge to link center coordinates."""
     link_centers = get_link_centers_opensense_v2(cml)
     gauges_coords = get_gauge_coords(gauges)
-    nearest_gauge = {cml_id: gauges_coords.apply(haversine_distance, axis=1, point2=ctr_coords).idxmin() for cml_id, ctr_coords in link_centers.iterrows()}
-    nearest_gauge = pd.Series(nearest_gauge.values(), index=nearest_gauge.keys(), name=gauge_id)
-    nearest_gauge.index.name = "cml_id"
-    return xr.merge([cml, gauges.sel({gauge_id: nearest_gauge.to_xarray()})], join="outer")
+    gauge_n_dist = nearest_gauge_to_link_centers(links_df, gauge_coords)
+    if metadata_only:
+        merged = xr.merge([cml, gauges.sel({gauge_id: gauge_n_dist[gauge_id].to_xarray()}).coords.to_dataset()], join="outer")
+    else:
+        merged = xr.merge([cml, gauges.sel({gauge_id: gauge_n_dist[gauge_id].to_xarray()})], join="outer")
+    return merged.assign_coords({"distance_km": (gauge_n_dist.index.name, gauge_n_dist["distance_km"].values)})
+
     
