@@ -8,7 +8,6 @@ __all__ = ['setup_default_map', 'explore_gauges', 'explore_links', 'explore_subl
 # %% ../../nbs/21_maps.vector.ipynb #83336d4c
 from typing import Callable, Literal
 
-import numpy as np
 import xarray as xr
 import geopandas as gpd
 import folium
@@ -16,8 +15,6 @@ import folium.plugins
 from shapely.geometry import LineString, Point
 from matplotlib.colors import Normalize, to_hex, ListedColormap
 import matplotlib.pyplot as plt
-
-from .. import open_cml_sample, open_gauge_sample
 
 # %% ../../nbs/21_maps.vector.ipynb #db3cddb5
 def setup_default_map(
