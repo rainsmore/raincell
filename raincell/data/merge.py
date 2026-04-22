@@ -37,7 +37,7 @@ def haversine_distance(point1: pd.Series, point2: pd.Series) -> float:
     return geodesic((point1["lat"], point1["lon"]), (point2["lat"], point2["lon"])).kilometers
 
 # %% ../../nbs/05_data.merge.ipynb #892b80e0
-def nearest_gauge_to_link_centers(
+def get_nearest_gauge_n_distance_to_link_centers(
     cml_centers: pd.DataFrame,   # DataFrame with 'lat','lon' columns (link centers)
     gauge_coords: pd.DataFrame # DataFrame with 'lat','lon' columns (gauge positions)
 ) -> pd.DataFrame:
@@ -73,7 +73,7 @@ def assign_nearest_gauge_to_link_center(
     """Assign the nearest gauge to each CML link based on geodesic distance from gauge to link center coordinates."""
     link_centers = get_link_centers_opensense_v2(cml)
     gauges_coords = get_gauge_coords(gauges)
-    gauge_n_dist = nearest_gauge_to_link_centers(links_df, gauge_coords)
+    gauge_n_dist = get_nearest_gauge_n_distance_to_link_centers(link_centers, gauge_coords)
     if metadata_only:
         merged = xr.merge([cml, gauges.sel({gauge_id: gauge_n_dist[gauge_id].to_xarray()}).coords.to_dataset()], join="outer")
     else:
