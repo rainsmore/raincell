@@ -72,7 +72,7 @@ def assign_nearest_gauge_to_link_center(
     ) -> xr.Dataset: # CML dataset merged with nearest gauge data and metadata
     """Assign the nearest gauge to each CML link based on geodesic distance from gauge to link center coordinates."""
     link_centers = get_link_centers_opensense_v2(cml)
-    gauges_coords = get_gauge_coords(gauges)
+    gauge_coords = get_gauge_coords(gauges)
     gauge_n_dist = get_nearest_gauge_n_distance_to_link_centers(link_centers, gauge_coords)
     if metadata_only:
         merged = xr.merge([cml, gauges.sel({gauge_id: gauge_n_dist[gauge_id].to_xarray()}).coords.to_dataset()], join="outer")
