@@ -1,6 +1,14 @@
 repos:
 - repo: https://github.com/fastai/nbdev
-  rev: 2.2.10
+  rev: 3.0.15
   hooks:
-  - id: nbdev_clean
-  - id: nbdev_export
+  - id: nbdev-clean
+  - id: nbdev-export
+- repo: local
+  hooks:
+  - id: clean-maps-notebook
+    name: Clean maps notebook outputs
+    entry: nbdev-clean --fname nbs/21_maps.vector.ipynb --clear_all
+    language: system
+    pass_filenames: false
+    always_run: true
