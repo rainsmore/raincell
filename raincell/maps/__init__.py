@@ -1,1 +1,1 @@
-from ._vector import setup_default_map, explore_links, explore_sublinks
+from ._vector import setup_default_map, explore_gauges, explore_links, explore_link_gauge_groups, explore_sublinks, explore_data
