@@ -64,7 +64,7 @@ We use a two-part solution:
 - This keeps the repository lean and diffs readable
 
 **2. Force execution with `#| exec_doc`**
-- Add `#| exec_doc` directive at the top of each code cell that needs execution
+- Add `#| exec_doc` directive at the top of each code cell that needs execution. You can use scripts/add_exec_doc.py for that but always verify the result.
 - This directive is processed reliably by nbdev's `proc_nbs()` during both `nbdev_preview` and `nbdev_docs`
 - Cells execute during documentation generation, regenerating fresh visualizations
 
