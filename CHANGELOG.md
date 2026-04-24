@@ -2,6 +2,16 @@
 
 <!-- do not remove -->
 
+## 0.2.8
+
+### New Features
+- Create sample ds of gauges assigned to cml data; vectorize distance computation using haversine; add visualization of link-gauge groups; add side-by-side plotting example ([#68](https://github.com/rainsmore/raincell/pull/68))
+- Add maps notebook output cleaning with script for docs generation ([#68](https://github.com/rainsmore/raincell/pull/68))
+
+## Bug
+- Fix pre-commit hooks to match nbdev3 ([#68](https://github.com/rainsmore/raincell/pull/68))
+
+
 ## 0.2.7
 
 
