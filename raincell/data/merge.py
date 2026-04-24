@@ -9,7 +9,6 @@ __all__ = ['assign_nearest_gauge_to_link_center']
 import numpy as np
 import pandas as pd
 import xarray as xr
-from geopy.distance import geodesic
 
 # %% ../../nbs/05_data.merge.ipynb #daf2c909
 def get_link_centers_opensense_v2(cml: xr.Dataset) -> pd.DataFrame:
