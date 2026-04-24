@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 # %% ../../nbs/21_maps.vector.ipynb #db3cddb5
 def setup_default_map(
         m: folium.Map = None, # Optional folium map to be setup with basemaps and controls
-        show: Literal["OpenStreetMap", "OpenTopoMap", "Esri.WorldImagery", "Esri.WorldGrayCanvas"] = "Esri.WorldImagery" # Basemap to show by default.
+        show: Literal["OpenStreetMap", "OpenTopoMap", "Esri.WorldImagery", "Esri.WorldGrayCanvas"] = "Esri.WorldGrayCanvas" # Basemap to show by default.
         ) -> folium.Map:
     """ Create a default folium map with common basemaps, layers and controls."""
     m = m or folium.Map(tiles=None)
