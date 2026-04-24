@@ -21,17 +21,13 @@ After cloning the repo, make sure the raincell package is installed in developme
 $ pip install -e .
 ```
 
-Please install the git hooks that run automatic scripts during each commit and merge to strip the notebooks of superfluous metadata (and avoid merge conflicts). If you are using Jupyter Notebooks or Jupyter Lab as your IDE, you only need to run the following command **inside** the repository:
-
-```sh
-nbdev_install_hooks
-```
-
-However, if you are using another IDE such as VS Code, you will need to run:
+Please install the git hooks that run automatic scripts during each commit and merge to strip the notebooks of superfluous metadata (and avoid merge conflicts). You only need to run the following command **inside** the repository:
 
 ```sh
 pre-commit install
 ```
+
+We have added some custom pre-commit hooks to the nvdev default hooks. You can check them on this file: `.pre-commit-config.yaml`
 
 Check the official nbdev documentation for more information on [nbdev_install_hooks](https://nbdev.fast.ai/tutorials/git_friendly_jupyter.html) or on [Pre-Commit Hooks](https://nbdev.fast.ai/tutorials/pre_commit.html).
 
@@ -39,14 +35,56 @@ Then make changes under the nbs/ directory and commit them.
 
 If for some reason you cannot (or don't want to) install the pre-commit hooks, please run the following command **before each commit**:
 ```sh 
-$ nbdev_prepare
+$ nbdev-prepare
 ```
-You can learn what nbdev_prepare does [here](https://nbdev.fast.ai/tutorials/tutorial.html#prepare-your-changes).
+You can learn what nbdev-prepare does [here](https://nbdev.fast.ai/tutorials/tutorial.html#prepare-your-changes).
 
 ## Do you want to contribute to the documentation?
 
 * Docs are automatically created from the notebooks in the nbs folder.
 * We use the **American Meteorological Society** citation [style](https://www.ametsoc.org/ams/publications/author-information/formatting-and-manuscript-components/references/) for our **references**. Please use this style when adding new references.
+
+### Notebook Outputs and Documentation Generation for visualization documentation
+
+Our documentation includes interactive map visualizations generated using Folium and GeoPandas. These outputs can be very large (HTML/JS embedded in notebook cells), making the git repository unwieldy and PR diffs difficult to review.
+
+We initially attempted to use nbdev's `exec_all: true` frontmatter directive to automatically execute all cells during documentation generation. However, this directive appears unreliable in nbdev 3.0.15—it for both `nbdev-preview` and `nbdev-docs`, and fails to execute cells in certain scenarios (possibly due to how nbdev's `proc_nbs()` processes notebooks before handing them to Quarto).
+
+The root issue seems to be that nbdev's notebook processor (`nbdev.process.NBProcessor`) has specific rules about which cells to execute:
+- Always executes: cells with `import`, `show_doc`, or `#| export`
+- Conditionally executes: cells with `#| exec_doc` directive
+- Frontmatter `exec_all`: Should execute all cells, but appears buggy
+
+#### Our Workaround
+
+We use a two-part solution:
+
+**1. Clear outputs before committing**
+- Use `nbdev-clean --clear_all` on visualization notebooks in pre-commit hooks
+- This keeps the repository lean and diffs readable
+
+**2. Force execution with `#| exec_doc`**
+- Add `#| exec_doc` directive at the top of each code cell that needs execution
+- This directive is processed reliably by nbdev's `proc_nbs()` during both `nbdev_preview` and `nbdev_docs`
+- Cells execute during documentation generation, regenerating fresh visualizations
+
+Example cell:
+```python
+#| exec_doc
+#| echo: false
+m = create_interactive_map()
+m.options['scrollWheelZoom'] = False
+m
+```
+
+#### Future Improvements
+
+If `exec_all: true` becomes reliable in future nbdev versions, we can:
+1. Remove all `#| exec_doc` directives
+2. Add `exec_all: true` to frontmatter
+3. Update this documentation
+
+Monitor [nbdev releases](https://github.com/fastai/nbdev/releases) for fixes to frontmatter execution handling.
 
 ## Did you find a bug?
 
