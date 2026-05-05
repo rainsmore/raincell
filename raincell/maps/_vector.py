@@ -18,6 +18,9 @@ from shapely.geometry import LineString, Point
 from matplotlib.colors import Normalize, to_hex, ListedColormap
 import matplotlib.pyplot as plt
 
+from ..data.convert import convert_sublinks_to_gdf
+from ._helpers import get_center, get_zoom_start
+
 # %% ../../nbs/21_maps.vector.ipynb #db3cddb5
 def setup_default_map(
         m: folium.Map = None, # Optional folium map to be setup with basemaps and controls
@@ -190,20 +193,12 @@ def explore_sublinks(
     default: Callable = setup_default_map, # Function to set up a default map including for example basemaps or controls
     add_transmission_sense: bool = True, # If true it will overlay an arrow over each sublink showing the sense of the signal
     cp_id_on_rclick: bool = True, # Enable copying cml_id and sublink_id when right clicking on a sublink
+    offset: float = 2e-4, # Perpendicular offset in degrees (2e-4 ~ 20m in the equator) in order to avoid overlap in visualization
     **explore_kwargs
     ) -> folium.Map:
     """ Geopandas [explore](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.explore.html) wrapper to visualize CML sublink structure by coloring on frequency """
-    sublinks_df = cml[["cml_id", "sublink_id"]].to_dataframe().reset_index()
-    sublinks_df = sublinks_df.dropna(subset="frequency").reset_index(drop=True)
-
-    offset = 1e-4 # Offset by ~10m in the equator
-    cc = sublinks_df.groupby('cml_id').cumcount() * offset
-    for coord in ['site_0_lat', 'site_1_lat', 'site_0_lon', 'site_1_lon']:
-        sublinks_df[coord] += cc
-
-    cols = [c for c in sublinks_df if "lat" not in c and "lon" not in c]
-    geom = [LineString([(l.site_0_lon, l.site_0_lat), (l.site_1_lon, l.site_1_lat)]) for _, l in sublinks_df.iterrows()]
-    sl_gdf = gpd.GeoDataFrame(sublinks_df[cols], geometry=geom, crs="EPSG:4326",)
+    sl_gdf = convert_sublinks_to_gdf(cml, offset=offset)
+    sl_gdf = sl_gdf.filter(regex="^(?!.*(lat|lon))")
     if "transmitter" in sl_gdf:
         sl_gdf["transmitter"] = sl_gdf["transmitter"].astype(int)
     explore_kwargs = {"tiles": None, "cmap": "gist_rainbow", "vmin": 8000, "vmax": 18000, "tiles": None, **explore_kwargs}
@@ -226,24 +221,18 @@ def explore_data(
     cml: xr.DataArray, # CML raw or derived data in OpenSense standard
     vmin: float = None, # Minimum value for the colormap
     vmax: float = None, # Maximum value for the colormap
-    cmap: ListedColormap = plt.cm.viridis # Matplotlib colormap
+    cmap: ListedColormap = plt.cm.viridis, # Matplotlib colormap
+    m: folium.Map = None, # Map where animation will be added. If not given, setup_default_map will be used
+    offset: float = 2e-4, # Perpendicular offset in degrees (2e-4 ~ 20m in the equator) in order to avoid overlap in visualization
 ) -> folium.Map:
     def assign_style(v, normalizer, cmap):
         return {"color": to_hex(cmap(normalizer(v))), "weight": 2} 
     if not cml.name:
         raise NameError("You must provide a dataset with a valid name")
     var = cml.name
-    df = cml.to_dataframe().dropna(subset=var)
-
-    offset = 1e-4 # Offset by ~10m in the equator
-    cc = df.groupby(['cml_id', 'time']).cumcount() * offset
-    for coord in ['site_0_lat', 'site_1_lat', 'site_0_lon', 'site_1_lon']:
-        df[coord] += cc
-
-    cols = [c for c in df if "lat" not in c and "lon" not in c]
-    geom = [LineString([(l.site_0_lon, l.site_0_lat), (l.site_1_lon, l.site_1_lat)]) for _, l in df.iterrows()]
-    gdf = gpd.GeoDataFrame(df[cols], geometry=geom, crs="EPSG:4326",)
-    gdf.reset_index(inplace=True)
+    gdf = convert_sublinks_to_gdf(cml, only_meta=False, offset=offset)
+    gdf = gdf.filter(regex="^(?!.*(lat|lon))")
+    gdf = gdf.dropna(subset=var)
 
     vmin = vmin if vmin is not None else gdf[var].min()
     vmax = vmax if vmax is not None else gdf[var].max()
@@ -255,7 +244,8 @@ def explore_data(
     gdf = gdf.sort_values(by=["time", "cml_id", "sublink_id"])
     gdf.drop(columns="time", inplace=True)
 
-    m = explore_sublinks(cml.to_dataset(), show=False) # Remove .to_dataset() when explore_sublinks will accept xr.DataArray
+    m = m or setup_default_map(folium.Map(tiles=None, zoom_start=get_zoom_start(cml), location=get_center(cml)))
+    explore_sublinks(cml.to_dataset(), show=False) # Remove .to_dataset() when explore_sublinks will accept xr.DataArray
     folium.plugins.TimestampedGeoJson(
         gdf.__geo_interface__,
         period="PT15M",
