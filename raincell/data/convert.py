@@ -20,7 +20,8 @@ def convert_sublinks_to_gdf(
 ) -> gpd.GeoDataFrame:
     """Convert CML to a GeoDataFrame assuming EPSG:4326 projection"""
     cml_meta = cml.coords.to_dataset()
-    cml_meta = cml_meta.drop_vars("time")
+    if "time" in cml_meta.coords:
+        cml_meta = cml_meta.drop_vars("time")
     meta_dims = list(cml_meta.dims)
     cml_df = cml_meta.to_dataframe().reset_index()
     cml_df = cml_df.drop_duplicates()
