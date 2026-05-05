@@ -19,15 +19,12 @@ def convert_sublinks_to_gdf(
     offset: float = 2e-4, # Perpendicular offset in degrees (2e-4 ~ 20m in the equator) in order to avoid overlap in visualization
 ) -> gpd.GeoDataFrame:
     """Convert CML to a GeoDataFrame assuming EPSG:4326 projection"""
-    if only_meta:
-        cml_meta = cml.coords.to_dataset()
-        cml_meta = cml_meta.drop_vars("time")
-        cml_df = cml_meta.to_dataframe().reset_index()
-    else:
-        cml_df = cml.to_dataframe()
-
+    cml_meta = cml.coords.to_dataset()
+    cml_meta = cml_meta.drop_vars("time")
+    meta_dims = list(cml_meta.dims)
+    cml_df = cml_meta.to_dataframe().reset_index()
+    cml_df = cml_df.drop_duplicates()
     cml_df = cml_df.dropna(subset=["site_0_lat", "site_0_lon", "site_1_lat", "site_1_lon", "frequency"], how="any")
-    cml_df = cml_df.reset_index().drop_duplicates()
 
     v = pd.DataFrame({
         "x": cml_df.site_1_lon - cml_df.site_0_lon,
@@ -53,4 +50,12 @@ def convert_sublinks_to_gdf(
     s1_lts = cml_df.site_1_lat + magnitude * n.y
 
     geom = [LineString([(s0_ln, s0_lt), (s1_ln, s1_lt)]) for s0_ln, s1_ln, s0_lt, s1_lt  in zip(s0_lns, s1_lns, s0_lts, s1_lts)]
-    return gpd.GeoDataFrame(cml_df, geometry=geom, crs="EPSG:4326")
+    gdf = gpd.GeoDataFrame(cml_df, geometry=geom, crs="EPSG:4326")
+    if only_meta:
+        return gdf
+    else:
+        gdf.set_index(meta_dims, inplace=True)
+        cml_data = cml.drop_vars([c for c in list(cml.coords) if c not in cml.dims])
+        gdf = gdf.join(cml_data.to_dataframe())
+        return gdf.reset_index()
+
