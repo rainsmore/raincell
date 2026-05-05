@@ -2,6 +2,14 @@
 
 <!-- do not remove -->
 
+## 0.2.9
+
+### New Features
+
+- Add xr to GeoDataFrame sublink conversion with orthogonally expanded geometries for viz ([#70](https://github.com/rainsmore/raincell/pull/70))
+
+
+
 ## 0.2.7
 
 
