@@ -26,6 +26,7 @@ def convert_sublinks_to_gdf(
     else:
         cml_df = cml.to_dataframe()
 
+    cml_df = cml_df.dropna(subset=["site_0_lat", "site_0_lon", "site_1_lat", "site_1_lon", "frequency"], how="any")
     cml_df = cml_df.reset_index().drop_duplicates()
 
     v = pd.DataFrame({
