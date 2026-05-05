@@ -2,6 +2,14 @@
 
 <!-- do not remove -->
 
+## 0.2.10
+
+
+### Bugs
+
+- Fix xr to gpd conversion on datasets without time dim ([#71](https://github.com/rainsmore/raincell/issues/71))
+
+
 ## 0.2.9
 
 ### New Features
